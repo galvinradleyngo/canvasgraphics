@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas LMS Visuals Generator</title>
+    <style>
+        :root {
+            --primary: #0055a4;
+            --primary-hover: #003d7a;
+            --bg: #f4f6f8;
+            --panel-bg: #ffffff;
+            --text: #333333;
+            --border: #dddddd;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* Lock body scrolling, panels handle it */
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .view-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* --- Gallery View --- */
+        #galleryView {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 2rem;
+            box-sizing: border-box;
+            background-color: var(--bg);
+        }
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .gallery-header h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+        }
+        .gallery-header p {
+            color: #666;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .gallery-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .gallery-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+        .card-thumb-container {
+            height: 150px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .card-thumb-scale {
+            transform: scale(0.65);
+            transform-origin: top left;
+            width: 153.8%;
+            pointer-events: none;
+        }
+        .card-info {
+            padding: 1rem;
+        }
+        .card-info h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+        .card-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        /* --- Editor View Layout Redesign --- */
+        #editorView {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        /* Sidebar Layout */
+        .sidebar {
+            width: 350px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .sidebar-header {
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background-color: #fcfcfc;
+        }
+        .sidebar-content {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto; /* Only the inputs scroll */
+        }
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background-color: #fafafa;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            overflow-y: auto;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* UI Elements */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            background: none;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s;
+            width: 100%;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+        .back-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .form-group input[type="text"], 
+        .form-group input[type="url"],
+        .form-group input[type="number"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .form-group input[type="color"] {
+            width: 100%;
+            height: 40px;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .section-title {
+            margin-top: 0;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .preview-box {
+            background-color: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            min-height: 150px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+        
+        .code-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1; /* Pushes code box to fill remaining vertical space */
+            min-height: 250px; /* Ensure it never completely disappears */
+        }
+        .code-box {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .copy-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: var(--primary-hover);
+        }
+        .copy-btn.copied {
+            background-color: #28a745 !important;
+        }
+        
+        /* Sticky Sidebar Copy Button */
+        .sidebar-copy-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Top-right inline code copy button */
+        .inline-copy {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.1);
+        }
+        .inline-copy:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .d-none { display: none !important; }
+
+        @media (max-width: 768px) {
+            #editorView {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+            }
+            .sidebar-content {
+                overflow-y: visible;
+            }
+            .main-content {
+                height: auto;
+                overflow-y: visible;
+            }
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Canvas LMS Visuals Generator</h1>
+    </header>
+
+    <div class="view-container">
+        <!-- GALLERY VIEW -->
+        <div id="galleryView">
+            <div class="gallery-header">
+                <h2>Select a Visual Element</h2>
+                <p>Choose from 40 components below to customize and copy into your Canvas course.</p>
+            </div>
+            <div class="gallery-grid" id="galleryGrid">
+                <!-- Cards injected via JS -->
+            </div>
+        </div>
+
+        <!-- EDITOR VIEW -->
+        <div id="editorView" class="d-none">
+            <!-- Fixed Layout Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <button class="back-btn" onclick="showGallery()">← Back to Gallery</button>
+                    <div style="margin-top: 1rem;">
+                        <label style="font-weight:bold; font-size:0.9rem; display:block; margin-bottom:0.5rem;">Switch Element Type</label>
+                        <select id="elementTypeSwitch" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" onchange="switchElement(this.value)">
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="sidebar-content">
+                    <h2 class="section-title" style="border:none; margin-bottom:0;">Customize</h2>
+                    <div id="editorPanel">
+                        <!-- Editor inputs inject here via JS -->
+                    </div>
+                </div>
+
+                <div class="sidebar-footer">
+                    <button class="copy-btn sidebar-copy-btn" id="sidebarCopyBtn" onclick="copyCode()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                        Copy HTML to Clipboard
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Live View & Code -->
+            <div class="main-content">
+                <h2 class="section-title">Live Preview</h2>
+                <div class="preview-box" id="previewArea">
+                    <!-- Live preview injects here -->
+                </div>
+
+                <div class="code-wrapper">
+                    <h2 class="section-title">Copy HTML for Canvas</h2>
+                    <p style="margin-top: 0; font-size: 0.9rem; color: #666; margin-bottom: 10px;">
+                        In Canvas, edit your page, click the <strong>&lt; / &gt;</strong> icon at the bottom right of the text editor to switch to HTML view, and paste this code.
+                    </p>
+                    <div class="code-box">
+                        <button class="copy-btn inline-copy" id="inlineCopyBtn" onclick="copyCode()">Copy</button>
+                        <div id="codeArea"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define all 40 elements
+        const elements = {
+            // --- ORIGINAL 15 (Updated for UI/UX Adaptiveness) ---
+            callout: {
+                name: 'Alert / Callout Box',
+                desc: 'Highlight important information like warnings or notes.',
+                fields: [
+                    { id: 'title', label: 'Title', type: 'text', default: 'Important Note' },
+                    { id: 'content', label: 'Message', type: 'textarea', default: 'Please remember to complete the reading assignment before attempting the quiz.' },
+                    { id: 'color', label: 'Accent Color', type: 'color', default: '#ffcc00' },
+                    { id: 'bg', label: 'Background Color', type: 'color', default: '#fff9e6' }
+                ],
+                generate: (data) => `
+<div style="padding: 15px 20px; border-left: 6px solid ${data.color}; background-color: ${data.bg}; margin: 20px 0; border-radius: 0 8px 8px 0; font-family: inherit; box-sizing: border-box; color: #333; max-width: 100%;">
+    <h4 style="margin: 0 0 10px 0; color: ${data.color}; font-size: 1.2em;">${data.title}</h4>
+    <p style="margin: 0; line-height: 1.5;">${data.content}</p>
+</div>`
+            },
+            button: {
+                name: 'Action Button',
+                desc: 'A highly visible, styled link for navigation.',
+                fields: [
+                    { id: 'label', label: 'Button Text', type: 'text', default: 'Go to Module 1' },
+                    { id: 'url', label: 'Link URL', type: 'url', default: 'https://' },
+                    { id: 'bgColor', label: 'Background Color', type: 'color', default: '#0055a4' },
+                    { id: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' },
+                    { id: 'align', label: 'Alignment', type: 'select', options: ['left', 'center', 'right'], default: 'center' }
+                ],
+                generate: (data) => `
+<div style="text-align: ${data.align}; margin: 20px 0; box-sizing: border-box; max-width: 100%;">
+    <a href="${data.url}" style="display: inline-block; padding: 12px 24px; background-color: ${data.bgColor}; color: ${data.textColor}; text-decoration: none; border-radius: 6px; font-family: inherit; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 100%; box-sizing: border-box;">${data.label}</a>
+</div>`
+            },
+            card: {
+                name: 'Module Card',
+                desc: 'A bordered box perfect for separating topics.',
+                fields: [
+                    { id: 'title', label: 'Card Title', type: 'text', default: 'Week 1: Introduction' },
+                    { id: 'content', label: 'Description', type: 'textarea', default: 'In this module, we will cover the foundational concepts of the course syllabus.' },
+                    { id: 'borderColor', label: 'Border Color', type: 'color', default: '#0055a4' }
+                ],
+                generate: (data) => `
+<div style="border: 2px solid #eaeaea; border-top: 6px solid ${data.borderColor}; border-radius: 8px; padding: 20px; margin: 20px 0; max-width: 100%; font-family: inherit; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
+    <h3 style="margin-top: 0; color: #333;">${data.title}</h3>
+    <p style="color: #555; line-height: 1.5; margin-bottom: 0;">${data.content}</p>
+</div>`
+            },
+            divider: {
+                name: 'Gradient Divider',
+                desc: 'A colorful horizontal line to break up content.',
+                fields: [
+                    { id: 'color1', label: 'Start Color', type: 'color', default: '#0055a4' },
+                    { id: 'color2', label: 'End Color', type: 'color', default: '#00a4e4' },
+                    { id: 'thickness', label: 'Thickness (px)', type: 'number', default: '4' }
+                ],
+                generate: (data) => `
+<hr style="border: 0; height: ${data.thickness}px; background-image: linear-gradient(to right, ${data.color1}, ${data.color2}); margin: 30px 0; border-radius: 2px; box-sizing: border-box; max-width: 100%;" />`
+            },
+            banner: {
+                name: 'Title Banner',
+                desc: 'A large, striking header block.',
+                fields: [
+                    { id: 'text', label: 'Banner Text', type: 'text', default: 'Welcome to the Course!' },
+                    { id: 'bgColor', label: 'Background Color', type: 'color', default: '#2c3e50' },
+                    { id: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' }
+                ],
+                generate: (data) => `
+<div style="background-color: ${data.bgColor}; color: ${data.textColor}; padding: 30px 20px; text-align: center; border-radius: 8px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: inset 0 0 20px rgba(0,0,0,0.2);">
+    <h2 style="margin: 0; font-size: 2.2em; text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); line-height: 1.2;">${data.text}</h2>
+</div>`
+            },
+            accordion: {
+                name: 'Interactive Accordion',
+                desc: 'Expandable content section. Fully interactive in Canvas.',
+                fields: [
+                    { id: 'title', label: 'Accordion Title', type: 'text', default: 'Click here to reveal more information' },
+                    { id: 'content', label: 'Hidden Content', type: 'textarea', default: 'Here are the detailed instructions that were hidden to save space. You can put lists or paragraphs here.' },
+                    { id: 'color', label: 'Theme Color', type: 'color', default: '#0055a4' },
+                    { id: 'bg', label: 'Header Background', type: 'color', default: '#f4f6f8' }
+                ],
+                generate: (data) => `
+<details style="border: 1px solid #ccc; border-radius: 6px; margin: 15px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; overflow: hidden;">
+    <summary style="padding: 15px; background-color: ${data.bg}; color: ${data.color}; font-weight: bold; cursor: pointer; outline: none;">${data.title}</summary>
+    <div style="padding: 15px; border-top: 1px solid #ccc; background-color: #fff; line-height: 1.5; color: #333; box-sizing: border-box;">${data.content}</div>
+</details>`
+            },
+            quote: {
+                name: 'Blockquote',
+                desc: 'A beautifully styled quotation with author attribution.',
+                fields: [
+                    { id: 'quote', label: 'Quote Text', type: 'textarea', default: 'Education is the passport to the future, for tomorrow belongs to those who prepare for it today.' },
+                    { id: 'author', label: 'Author', type: 'text', default: 'Malcolm X' },
+                    { id: 'color', label: 'Accent Color', type: 'color', default: '#d32f2f' }
+                ],
+                generate: (data) => `
+<blockquote style="border-left: 5px solid ${data.color}; margin: 20px 0; padding: 15px 20px; background-color: #f9f9f9; font-family: inherit; box-sizing: border-box; font-size: 1.15em; color: #444; border-radius: 0 8px 8px 0; max-width: 100%;">
+    <p style="margin: 0 0 10px 0; font-style: italic; line-height: 1.6;">"${data.quote}"</p>
+    <footer style="font-size: 0.85em; font-weight: bold; color: ${data.color};">— ${data.author}</footer>
+</blockquote>`
+            },
+            imageCaption: {
+                name: 'Image with Caption',
+                desc: 'A framed image with a dedicated caption area below it.',
+                fields: [
+                    { id: 'url', label: 'Image URL', type: 'url', default: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80' },
+                    { id: 'alt', label: 'Alt Text (Accessibility)', type: 'text', default: 'Students working on computers' },
+                    { id: 'caption', label: 'Caption Text', type: 'text', default: 'Figure 1: Students engaged in lab activities.' },
+                    { id: 'width', label: 'Max Width (px or %)', type: 'text', default: '100%' }
+                ],
+                generate: (data) => `
+<figure style="margin: 20px auto; max-width: ${data.width}; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-family: inherit;">
+    <img src="${data.url}" alt="${data.alt}" style="width: 100%; height: auto; display: block; object-fit: cover;">
+    <figcaption style="padding: 12px; background-color: #f8f9fa; text-align: center; font-size: 0.9em; color: #555; border-top: 1px solid #ddd; box-sizing: border-box;">${data.caption}</figcaption>
+</figure>`
+            },
+            steps: {
+                name: 'Step-by-Step List',
+                desc: 'A visual numbered sequence for instructions.',
+                fields: [
+                    { id: 'step1', label: 'Step 1 Text', type: 'text', default: 'Read the syllabus document carefully.' },
+                    { id: 'step2', label: 'Step 2 Text', type: 'text', default: 'Post your introduction in the discussion forum.' },
+                    { id: 'step3', label: 'Step 3 Text', type: 'text', default: 'Complete the Week 1 Quiz.' },
+                    { id: 'color', label: 'Number Color', type: 'color', default: '#0055a4' }
+                ],
+                generate: (data) => `
+<div style="margin: 20px 0; font-family: inherit; color: #333; box-sizing: border-box; max-width: 100%;">
+    <div style="display: flex; margin-bottom: 12px; align-items: flex-start;">
+        <div style="background-color: ${data.color}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0;">1</div>
+        <div style="padding-top: 4px; line-height: 1.4;">${data.step1}</div>
+    </div>
+    <div style="display: flex; margin-bottom: 12px; align-items: flex-start;">
+        <div style="background-color: ${data.color}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0;">2</div>
+        <div style="padding-top: 4px; line-height: 1.4;">${data.step2}</div>
+    </div>
+    <div style="display: flex; align-items: flex-start;">
+        <div style="background-color: ${data.color}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0;">3</div>
+        <div style="padding-top: 4px; line-height: 1.4;">${data.step3}</div>
+    </div>
+</div>`
+            },
+            badge: {
+                name: 'Pill Badge',
+                desc: 'Small rounded labels to highlight keywords or statuses.',
+                fields: [
+                    { id: 'label', label: 'Badge Text', type: 'text', default: 'Required' },
+                    { id: 'bgColor', label: 'Background Color', type: 'color', default: '#e53935' },
+                    { id: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' }
+                ],
+                generate: (data) => `
+<span style="background-color: ${data.bgColor}; color: ${data.textColor}; padding: 4px 12px; border-radius: 999px; font-size: 0.85em; font-weight: bold; font-family: inherit; box-sizing: border-box; display: inline-block; margin: 4px 2px; text-transform: uppercase; letter-spacing: 0.5px;">${data.label}</span>`
+            },
+            progress: {
+                name: 'Progress Bar',
+                desc: 'A visual indicator of completion or grading weight.',
+                fields: [
+                    { id: 'label', label: 'Label', type: 'text', default: 'Course Completion' },
+                    { id: 'percent', label: 'Percentage (0-100)', type: 'number', default: '75' },
+                    { id: 'fill', label: 'Fill Color', type: 'color', default: '#4caf50' },
+                    { id: 'bg', label: 'Track Color', type: 'color', default: '#e0e0e0' }
+                ],
+                generate: (data) => `
+<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <div style="margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: #333;">${data.label}</div>
+    <div style="width: 100%; background-color: ${data.bg}; border-radius: 8px; overflow: hidden; box-sizing: border-box;">
+        <div style="width: ${data.percent}%; background-color: ${data.fill}; color: white; padding: 4px 10px; text-align: right; box-sizing: border-box; font-size: 0.8em; font-weight: bold; min-width: 40px;">${data.percent}%</div>
+    </div>
+</div>`
+            },
+            columns: {
+                name: 'Two Columns',
+                desc: 'Side-by-side layout (stacks on mobile screens).',
+                fields: [
+                    { id: 'col1', label: 'Left Content', type: 'textarea', default: '<strong>Objective 1:</strong> Understand the principles of design.' },
+                    { id: 'col2', label: 'Right Content', type: 'textarea', default: '<strong>Objective 2:</strong> Apply principles to web development.' },
+                    { id: 'gap', label: 'Gap between columns (px)', type: 'number', default: '20' }
+                ],
+                generate: (data) => `
+<div style="display: flex; flex-wrap: wrap; gap: ${data.gap}px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; line-height: 1.5; color: #333;">
+    <div style="flex: 1; min-width: 250px; background: #f9f9f9; padding: 15px; border-radius: 6px; box-sizing: border-box;">${data.col1}</div>
+    <div style="flex: 1; min-width: 250px; background: #f9f9f9; padding: 15px; border-radius: 6px; box-sizing: border-box;">${data.col2}</div>
+</div>`
+            },
+            highlight: {
+                name: 'Highlight Marker',
+                desc: 'Make specific text stand out inline.',
+                fields: [
+                    { id: 'text', label: 'Text to Highlight', type: 'text', default: 'Exam on Friday' },
+                    { id: 'color', label: 'Highlight Color', type: 'color', default: '#ffff00' }
+                ],
+                generate: (data) => `
+<mark style="background-color: ${data.color}; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #000; box-sizing: border-box;">${data.text}</mark>`
+            },
+            takeaways: {
+                name: 'Key Takeaways',
+                desc: 'A distinct list box using checkmarks.',
+                fields: [
+                    { id: 'title', label: 'Box Title', type: 'text', default: 'Key Takeaways' },
+                    { id: 'item1', label: 'Item 1', type: 'text', default: 'Always check the rubric.' },
+                    { id: 'item2', label: 'Item 2', type: 'text', default: 'Submit assignments in PDF format.' },
+                    { id: 'item3', label: 'Item 3', type: 'text', default: 'Late work is penalized by 10% per day.' },
+                    { id: 'color', label: 'Accent Color', type: 'color', default: '#2e7d32' }
+                ],
+                generate: (data) => `
+<div style="border: 2px dashed ${data.color}; padding: 20px; border-radius: 8px; background-color: #f1f8e9; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; color: #333;">
+    <h3 style="margin-top: 0; color: ${data.color}; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">🎯</span> ${data.title}
+    </h3>
+    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 0;">
+        <li style="margin-bottom: 8px; line-height: 1.4;">✅ ${data.item1}</li>
+        <li style="margin-bottom: 8px; line-height: 1.4;">✅ ${data.item2}</li>
+        <li style="line-height: 1.4;">✅ ${data.item3}</li>
+    </ul>
+</div>`
+            },
+            profile: {
+                name: 'Instructor Profile',
+                desc: 'A layout combining a portrait photo and biography text.',
+                fields: [
+                    { id: 'name', label: 'Name', type: 'text', default: 'Dr. Jane Smith' },
+                    { id: 'role', label: 'Role/Title', type: 'text', default: 'Lead Instructor' },
+                    { id: 'bio', label: 'Biography', type: 'textarea', default: 'Dr. Smith has over 15 years of experience in instructional design and loves helping students succeed.' },
+                    { id: 'img', label: 'Image URL', type: 'url', default: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80' },
+                    { id: 'color', label: 'Theme Color', type: 'color', default: '#0055a4' }
+                ],
+                generate: (data) => `
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 20px; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <img src="${data.img}" alt="${data.name}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid ${data.color}; flex-shrink: 0;">
+    <div style="flex: 1; min-width: 200px; box-sizing: border-box;">
+        <h3 style="margin: 0 0 5px 0; color: #333; font-size: 1.4em;">${data.name}</h3>
+        <strong style="color: ${data.color}; font-size: 1em; display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">${data.role}</strong>
+        <p style="margin: 0; color: #555; font-size: 0.95em; line-height: 1.6;">${data.bio}</p>
+    </div>
+</div>`
+            },
+
+            // --- 16-25 ADDITIONS ---
+            infoPanel: {
+                name: 'Icon Info Panel',
+                desc: 'A highlighted box with an emoji icon for notes or tips.',
+                fields: [
+                    { id: 'icon', label: 'Emoji Icon', type: 'text', default: '💡' },
+                    { id: 'title', label: 'Title', type: 'text', default: 'Pro Tip' },
+                    { id: 'content', label: 'Content', type: 'textarea', default: 'Save your work frequently while editing in Canvas.' },
+                    { id: 'bgColor', label: 'Background Color', type: 'color', default: '#e3f2fd' },
+                    { id: 'iconColor', label: 'Icon Background', type: 'color', default: '#1565c0' }
+                ],
+                generate: (data) => `
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; background-color: ${data.bgColor}; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <div style="background-color: ${data.iconColor}; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; flex-shrink: 0; margin-right: 15px; margin-bottom: 10px;">${data.icon}</div>
+    <div style="flex: 1; min-width: 200px; box-sizing: border-box;">
+        <h4 style="margin: 0 0 5px 0; color: #333; font-size: 1.1em;">${data.title}</h4>
+        <p style="margin: 0; color: #555; line-height: 1.5;">${data.content}</p>
+    </div>
+</div>`
+            },
+            videoEmbed: {
+                name: 'Responsive Video',
+                desc: 'A YouTube video embed that automatically resizes to fit the screen.',
+                fields: [
+                    { id: 'url', label: 'YouTube Embed URL', type: 'url', default: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+                ],
+                generate: (data) => `
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 20px 0; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); box-sizing: border-box;">
+    <iframe src="${data.url}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
+</div>`
+            },
+            timeline: {
+                name: 'Vertical Timeline',
+                desc: 'A visual list of events, deadlines, or historical milestones.',
+                fields: [
+                    { id: 'event1', label: 'Event 1 Text', type: 'text', default: 'Week 1: Foundations' },
+                    { id: 'event2', label: 'Event 2 Text', type: 'text', default: 'Week 2: Midterm Project' },
+                    { id: 'event3', label: 'Event 3 Text', type: 'text', default: 'Week 3: Final Exam' },
+                    { id: 'color', label: 'Theme Color', type: 'color', default: '#0055a4' }
+                ],
+                generate: (data) => `
+<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <div style="display: flex; margin-bottom: 15px;">
+        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px; flex-shrink: 0;">
+            <div style="width: 16px; height: 16px; background-color: ${data.color}; border-radius: 50%;"></div>
+            <div style="width: 4px; height: 100%; background-color: ${data.color}; margin-top: 4px; min-height: 20px;"></div>
+        </div>
+        <div style="padding-bottom: 15px; color: #333; font-weight: bold; padding-top: -2px; line-height: 1.4;">${data.event1}</div>
+    </div>
+    <div style="display: flex; margin-bottom: 15px;">
+        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px; flex-shrink: 0;">
+            <div style="width: 16px; height: 16px; background-color: ${data.color}; border-radius: 50%;"></div>
+            <div style="width: 4px; height: 100%; background-color: ${data.color}; margin-top: 4px; min-height: 20px;"></div>
+        </div>
+        <div style="padding-bottom: 15px; color: #333; font-weight: bold; padding-top: -2px; line-height: 1.4;">${data.event2}</div>
+    </div>
+    <div style="display: flex;">
+        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px; flex-shrink: 0;">
+            <div style="width: 16px; height: 16px; background-color: ${data.color}; border-radius: 50%;"></div>
+        </div>
+        <div style="color: #333; font-weight: bold; padding-top: -2px; line-height: 1.4;">${data.event3}</div>
+    </div>
+</div>`
+            },
+            definitionList: {
+                name: 'Definition List',
+                desc: 'Perfect for glossaries or defining key terms.',
+                fields: [
+                    { id: 'term', label: 'Term', type: 'text', default: 'Constructivism' },
+                    { id: 'def', label: 'Definition', type: 'textarea', default: 'A theory in education that recognizes learners construct new understandings and knowledge, rather than passively receiving information.' },
+                    { id: 'color', label: 'Term Color', type: 'color', default: '#d32f2f' }
+                ],
+                generate: (data) => `
+<dl style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; background-color: #fcfcfc; padding: 15px; border-left: 4px solid #ddd; border-radius: 0 8px 8px 0;">
+    <dt style="font-weight: bold; color: ${data.color}; font-size: 1.1em; margin-bottom: 5px;">${data.term}</dt>
+    <dd style="margin: 0; color: #444; line-height: 1.5;">${data.def}</dd>
+</dl>`
+            },
+            checklist: {
+                name: 'Visual Checklist',
+                desc: 'A stylized to-do list for modules or assignments.',
+                fields: [
+                    { id: 'title', label: 'Checklist Title', type: 'text', default: 'Module 1 To-Do:' },
+                    { id: 'item1', label: 'Task 1', type: 'text', default: 'Read Chapter 1' },
+                    { id: 'item2', label: 'Task 2', type: 'text', default: 'Participate in Discussion' },
+                    { id: 'item3', label: 'Task 3', type: 'text', default: 'Submit Assignment 1' }
+                ],
+                generate: (data) => `
+<div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 20px 0; background-color: #ffffff; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+    <h4 style="margin: 0 0 15px 0; color: #333; font-size: 1.2em; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">📋 ${data.title}</h4>
+    <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
+        <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 4px; margin-right: 12px; flex-shrink: 0; margin-top: 2px;"></span>
+        <span style="color: #444; font-size: 1em; line-height: 1.4;">${data.item1}</span>
+    </div>
+    <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
+        <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 4px; margin-right: 12px; flex-shrink: 0; margin-top: 2px;"></span>
+        <span style="color: #444; font-size: 1em; line-height: 1.4;">${data.item2}</span>
+    </div>
+    <div style="display: flex; align-items: flex-start;">
+        <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 4px; margin-right: 12px; flex-shrink: 0; margin-top: 2px;"></span>
+        <span style="color: #444; font-size: 1em; line-height: 1.4;">${data.item3}</span>
+    </div>
+</div>`
+            },
+            testimonial: {
+                name: 'Testimonial / Review',
+                desc: 'Showcase student feedback, quotes, or peer reviews.',
+                fields: [
+                    { id: 'quote', label: 'Quote', type: 'textarea', default: 'This course completely changed my perspective on the subject. Highly recommended!' },
+                    { id: 'name', label: 'Name', type: 'text', default: 'Alex Johnson' },
+                    { id: 'img', label: 'Avatar URL', type: 'url', default: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80' },
+                    { id: 'stars', label: 'Star Rating (1-5)', type: 'number', default: '5' }
+                ],
+                generate: (data) => {
+                    let starsStr = '';
+                    for(let i=0; i<parseInt(data.stars); i++) starsStr += '⭐';
+                    return `
+<div style="text-align: center; padding: 30px 20px; background-color: #f8f9fa; border-radius: 12px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; border: 1px solid #eaeaea;">
+    <div style="margin-bottom: 15px; font-size: 1.2em;">${starsStr}</div>
+    <p style="font-style: italic; color: #555; font-size: 1.1em; line-height: 1.6; margin: 0 0 20px 0;">"${data.quote}"</p>
+    <img src="${data.img}" alt="${data.name}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #ddd;">
+    <div style="font-weight: bold; color: #333; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">${data.name}</div>
+</div>`
+                }
+            },
+            calendarDate: {
+                name: 'Calendar Date Block',
+                desc: 'Highlight important deadlines or events.',
+                fields: [
+                    { id: 'month', label: 'Month', type: 'text', default: 'OCT' },
+                    { id: 'day', label: 'Day', type: 'text', default: '15' },
+                    { id: 'event', label: 'Event Name', type: 'text', default: 'Midterm Essay Due' },
+                    { id: 'color', label: 'Calendar Color', type: 'color', default: '#d32f2f' }
+                ],
+                generate: (data) => `
+<div style="display: flex; align-items: center; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; background-color: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    <div style="border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; width: 60px; flex-shrink: 0; margin-right: 20px; border: 1px solid #ddd;">
+        <div style="background-color: ${data.color}; color: white; font-weight: bold; font-size: 0.8em; padding: 4px 0; text-transform: uppercase;">${data.month}</div>
+        <div style="background-color: white; color: #333; font-weight: bold; font-size: 1.5em; padding: 6px 0;">${data.day}</div>
+    </div>
+    <div style="color: #333; font-weight: bold; font-size: 1.1em; line-height: 1.3;">
+        ${data.event}
+    </div>
+</div>`
+            },
+            ribbon: {
+                name: 'Notification Ribbon',
+                desc: 'A full-width colorful stripe for urgent announcements.',
+                fields: [
+                    { id: 'text', label: 'Announcement', type: 'text', default: 'Reminder: Office hours are cancelled this Thursday.' },
+                    { id: 'bgColor', label: 'Background Color', type: 'color', default: '#ffeb3b' },
+                    { id: 'textColor', label: 'Text Color', type: 'color', default: '#000000' }
+                ],
+                generate: (data) => `
+<div style="background-color: ${data.bgColor}; color: ${data.textColor}; text-align: center; padding: 12px 20px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; font-weight: bold; font-size: 1.05em; border-top: 2px dashed rgba(0,0,0,0.2); border-bottom: 2px dashed rgba(0,0,0,0.2); line-height: 1.4;">
+    📢 ${data.text}
+</div>`
+            },
+            resourceList: {
+                name: 'Resource Links',
+                desc: 'A styled list of downloadable files or external links.',
+                fields: [
+                    { id: 'res1', label: 'Resource 1 Name', type: 'text', default: 'Course Syllabus (PDF)' },
+                    { id: 'url1', label: 'Resource 1 URL', type: 'url', default: 'https://' },
+                    { id: 'res2', label: 'Resource 2 Name', type: 'text', default: 'Lecture Slides (PPTX)' },
+                    { id: 'url2', label: 'Resource 2 URL', type: 'url', default: 'https://' },
+                    { id: 'color', label: 'Accent Color', type: 'color', default: '#0055a4' }
+                ],
+                generate: (data) => `
+<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <h4 style="margin: 0 0 10px 0; color: #333;">Downloads & Links</h4>
+    <a href="${data.url1}" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f4f6f8; border-left: 4px solid ${data.color}; color: #333; text-decoration: none; border-radius: 0 6px 6px 0; transition: background-color 0.2s; box-sizing: border-box;">
+        📄 <span style="margin-left: 8px; font-weight: bold; text-decoration: underline;">${data.res1}</span>
+    </a>
+    <a href="${data.url2}" style="display: block; padding: 12px 15px; background-color: #f4f6f8; border-left: 4px solid ${data.color}; color: #333; text-decoration: none; border-radius: 0 6px 6px 0; transition: background-color 0.2s; box-sizing: border-box;">
+        📎 <span style="margin-left: 8px; font-weight: bold; text-decoration: underline;">${data.res2}</span>
+    </a>
+</div>`
+            },
+            gridGallery: {
+                name: 'Grid Gallery (3 Images)',
+                desc: 'Display three images beautifully side-by-side.',
+                fields: [
+                    { id: 'img1', label: 'Image 1 URL', type: 'url', default: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80' },
+                    { id: 'img2', label: 'Image 2 URL', type: 'url', default: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80' },
+                    { id: 'img3', label: 'Image 3 URL', type: 'url', default: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80' }
+                ],
+                generate: (data) => `
+<div style="display: flex; gap: 15px; margin: 20px 0; flex-wrap: wrap; box-sizing: border-box; max-width: 100%;">
+    <div style="flex: 1; min-width: 150px; box-sizing: border-box;">
+        <img src="${data.img1}" alt="Gallery image 1" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    </div>
+    <div style="flex: 1; min-width: 150px; box-sizing: border-box;">
+        <img src="${data.img2}" alt="Gallery image 2" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    </div>
+    <div style="flex: 1; min-width: 150px; box-sizing: border-box;">
+        <img src="${data.img3}" alt="Gallery image 3" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    </div>
+</div>`
+            },
+
+            // --- 26-35 ADDITIONS ---
+            warningAlert: {
+                name: 'Warning / Danger Alert',
+                desc: 'Red alert box for critical warnings or deadlines.',
+                fields: [
+                    { id: 'title', label: 'Title', type: 'text', default: 'Stop! Critical Deadline' },
+                    { id: 'content', label: 'Message', type: 'textarea', default: 'This assignment closes tonight at 11:59 PM. No late submissions will be accepted.' }
+                ],
+                generate: (data) => `
+<div style="background-color: #ffebee; border-left: 6px solid #f44336; padding: 15px 20px; margin: 20px 0; border-radius: 4px; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <h4 style="margin: 0 0 10px 0; color: #d32f2f; display: flex; align-items: center;"><span style="margin-right: 8px;">⚠️</span> ${data.title}</h4>
+    <p style="margin: 0; color: #b71c1c; line-height: 1.5;">${data.content}</p>
+</div>`
+            },
+            successBanner: {
+                name: 'Success Banner',
+                desc: 'Green banner for positive reinforcement or completion.',
+                fields: [
+                    { id: 'title', label: 'Title', type: 'text', default: 'Module Completed!' },
+                    { id: 'content', label: 'Message', type: 'textarea', default: 'Great job! You are ready to move on to the next section.' }
+                ],
+                generate: (data) => `
+<div style="background-color: #e8f5e9; border: 1px solid #4caf50; padding: 15px 20px; margin: 20px 0; border-radius: 8px; font-family: inherit; box-sizing: border-box; max-width: 100%; text-align: center;">
+    <h4 style="margin: 0 0 5px 0; color: #2e7d32; font-size: 1.2em;">✅ ${data.title}</h4>
+    <p style="margin: 0; color: #1b5e20; line-height: 1.5;">${data.content}</p>
+</div>`
+            },
+            faq: {
+                name: 'Q&A / FAQ Toggle',
+                desc: 'Two stacked accordions perfect for Frequently Asked Questions.',
+                fields: [
+                    { id: 'q1', label: 'Question 1', type: 'text', default: 'How is this course graded?' },
+                    { id: 'a1', label: 'Answer 1', type: 'textarea', default: 'Grades are based 50% on assignments and 50% on the final exam.' },
+                    { id: 'q2', label: 'Question 2', type: 'text', default: 'Are there live lectures?' },
+                    { id: 'a2', label: 'Answer 2', type: 'textarea', default: 'No, this course is completely asynchronous.' }
+                ],
+                generate: (data) => `
+<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <details style="margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; box-sizing: border-box;">
+        <summary style="padding: 15px; background-color: #fafafa; font-weight: bold; cursor: pointer; color: #333; outline: none; box-sizing: border-box;">❓ ${data.q1}</summary>
+        <div style="padding: 15px; border-top: 1px solid #ddd; background-color: #fff; line-height: 1.5; color: #444; box-sizing: border-box;">${data.a1}</div>
+    </details>
+    <details style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; box-sizing: border-box;">
+        <summary style="padding: 15px; background-color: #fafafa; font-weight: bold; cursor: pointer; color: #333; outline: none; box-sizing: border-box;">❓ ${data.q2}</summary>
+        <div style="padding: 15px; border-top: 1px solid #ddd; background-color: #fff; line-height: 1.5; color: #444; box-sizing: border-box;">${data.a2}</div>
+    </details>
+</div>`
+            },
+            toc: {
+                name: 'Table of Contents',
+                desc: 'A quick navigation box for long pages.',
+                fields: [
+                    { id: 'title', label: 'Title', type: 'text', default: 'In this module:' },
+                    { id: 'item1', label: 'Item 1', type: 'text', default: '1. Introduction' },
+                    { id: 'item2', label: 'Item 2', type: 'text', default: '2. Core Concepts' },
+                    { id: 'item3', label: 'Item 3', type: 'text', default: '3. Summary & Quiz' }
+                ],
+                generate: (data) => `
+<div style="background-color: #f4f6f8; border: 1px solid #ccd1d9; padding: 20px; border-radius: 8px; margin: 20px 0; display: inline-block; min-width: 250px; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <h4 style="margin: 0 0 15px 0; color: #333; border-bottom: 2px solid #ddd; padding-bottom: 5px;">📑 ${data.title}</h4>
+    <ul style="list-style-type: none; padding: 0; margin: 0; line-height: 1.8;">
+        <li><a href="#" style="color: #0055a4; text-decoration: none;">${data.item1}</a></li>
+        <li><a href="#" style="color: #0055a4; text-decoration: none;">${data.item2}</a></li>
+        <li><a href="#" style="color: #0055a4; text-decoration: none;">${data.item3}</a></li>
+    </ul>
+</div>`
+            },
+            audioPlayer: {
+                name: 'Audio Player Wrapper',
+                desc: 'A styled container for an audio file (requires an mp3 URL).',
+                fields: [
+                    { id: 'title', label: 'Audio Title', type: 'text', default: 'Lecture 1 Podcast' },
+                    { id: 'desc', label: 'Description', type: 'text', default: 'Listen to the audio version of this week\'s reading.' },
+                    { id: 'url', label: 'Audio MP3 URL', type: 'url', default: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+                    { id: 'color', label: 'Theme Color', type: 'color', default: '#673ab7' }
+                ],
+                generate: (data) => `
+<div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 20px 0; background-color: #fff; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
+    <div style="background-color: ${data.color}; color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; flex-shrink: 0;">🎧</div>
+    <div style="flex: 1; min-width: 200px; box-sizing: border-box;">
+        <h4 style="margin: 0 0 5px 0; color: #333;">${data.title}</h4>
+        <p style="margin: 0 0 10px 0; color: #666; font-size: 0.9em;">${data.desc}</p>
+        <audio controls style="width: 100%; height: 40px; outline: none;">
+            <source src="${data.url}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+</div>`
+            },
+            comparisonTable: {
+                name: 'Comparison Table',
+                desc: 'A clean, styled 2x2 table for comparing concepts.',
+                fields: [
+                    { id: 'h1', label: 'Header 1', type: 'text', default: 'Mitosis' },
+                    { id: 'h2', label: 'Header 2', type: 'text', default: 'Meiosis' },
+                    { id: 'r1c1', label: 'Row 1, Col 1', type: 'text', default: 'Somatic cells' },
+                    { id: 'r1c2', label: 'Row 1, Col 2', type: 'text', default: 'Germ cells' },
+                    { id: 'r2c1', label: 'Row 2, Col 1', type: 'text', default: 'Produces 2 diploid cells' },
+                    { id: 'r2c2', label: 'Row 2, Col 2', type: 'text', default: 'Produces 4 haploid cells' },
+                    { id: 'color', label: 'Header Color', type: 'color', default: '#0055a4' }
+                ],
+                generate: (data) => `
+<div style="overflow-x: auto; width: 100%; box-sizing: border-box; margin: 20px 0;">
+    <table style="width: 100%; min-width: 400px; border-collapse: collapse; font-family: inherit; box-shadow: 0 0 10px rgba(0,0,0,0.05); box-sizing: border-box;">
+        <thead>
+            <tr>
+                <th style="background-color: ${data.color}; color: white; padding: 12px 15px; text-align: left; border: 1px solid #ddd; width: 50%;">${data.h1}</th>
+                <th style="background-color: ${data.color}; color: white; padding: 12px 15px; text-align: left; border: 1px solid #ddd; width: 50%;">${data.h2}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 12px 15px; border: 1px solid #ddd; background-color: #fff;">${data.r1c1}</td>
+                <td style="padding: 12px 15px; border: 1px solid #ddd; background-color: #fff;">${data.r1c2}</td>
+            </tr>
+            <tr>
+                <td style="padding: 12px 15px; border: 1px solid #ddd; background-color: #fafafa;">${data.r2c1}</td>
+                <td style="padding: 12px 15px; border: 1px solid #ddd; background-color: #fafafa;">${data.r2c2}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>`
+            },
+            flashcard: {
+                name: 'Static Flashcard',
+                desc: 'A prominent card with a term and definition.',
+                fields: [
+                    { id: 'term', label: 'Term (Top)', type: 'text', default: 'Photosynthesis' },
+                    { id: 'def', label: 'Definition (Bottom)', type: 'textarea', default: 'The process by which green plants and some other organisms use sunlight to synthesize foods from carbon dioxide and water.' },
+                    { id: 'color', label: 'Top Bar Color', type: 'color', default: '#4caf50' }
+                ],
+                generate: (data) => `
+<div style="max-width: 400px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.1); font-family: inherit; box-sizing: border-box; text-align: center; border: 1px solid #eaeaea;">
+    <div style="background-color: ${data.color}; padding: 30px 20px; color: white; box-sizing: border-box;">
+        <h3 style="margin: 0; font-size: 1.5em; letter-spacing: 1px;">${data.term}</h3>
+    </div>
+    <div style="background-color: #fff; padding: 30px 20px; color: #444; font-size: 1.1em; line-height: 1.5; box-sizing: border-box;">
+        ${data.def}
+    </div>
+</div>`
+            },
+            horizontalSteps: {
+                name: 'Horizontal Flow / Steps',
+                desc: 'A left-to-right process diagram.',
+                fields: [
+                    { id: 's1', label: 'Step 1', type: 'text', default: 'Drafting' },
+                    { id: 's2', label: 'Step 2', type: 'text', default: 'Peer Review' },
+                    { id: 's3', label: 'Step 3', type: 'text', default: 'Final Submit' },
+                    { id: 'color', label: 'Theme Color', type: 'color', default: '#0055a4' }
+                ],
+                generate: (data) => `
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin: 30px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; text-align: center;">
+    <div style="background-color: ${data.color}; color: white; padding: 10px 20px; border-radius: 999px; font-weight: bold; flex: 1; min-width: 120px; box-sizing: border-box;">${data.s1}</div>
+    <div style="color: ${data.color}; font-size: 1.5em; font-weight: bold; line-height: 1;">➔</div>
+    <div style="background-color: ${data.color}; color: white; padding: 10px 20px; border-radius: 999px; font-weight: bold; flex: 1; min-width: 120px; box-sizing: border-box;">${data.s2}</div>
+    <div style="color: ${data.color}; font-size: 1.5em; font-weight: bold; line-height: 1;">➔</div>
+    <div style="background-color: ${data.color}; color: white; padding: 10px 20px; border-radius: 999px; font-weight: bold; flex: 1; min-width: 120px; box-sizing: border-box;">${data.s3}</div>
+</div>`
+            },
+            polaroidImage: {
+                name: 'Polaroid Style Photo',
+                desc: 'A fun, rotated photo style with a handwritten-like caption.',
+                fields: [
+                    { id: 'url', label: 'Image URL', type: 'url', default: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80' },
+                    { id: 'caption', label: 'Caption', type: 'text', default: 'Field trip to the museum!' },
+                    { id: 'rotation', label: 'Rotation (deg)', type: 'number', default: '3' }
+                ],
+                generate: (data) => `
+<div style="text-align: center; margin: 40px 0; box-sizing: border-box; max-width: 100%; overflow: hidden;">
+    <div style="background-color: white; padding: 15px 15px 40px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: inline-block; transform: rotate(${data.rotation}deg); font-family: 'Comic Sans MS', cursive, sans-serif; border: 1px solid #ddd; box-sizing: border-box; max-width: 100%;">
+        <img src="${data.url}" alt="Polaroid photo" style="max-width: 100%; width: 250px; height: auto; object-fit: cover; border: 1px solid #eee; display: block;">
+        <div style="text-align: center; margin-top: 15px; color: #333; font-size: 1.1em; line-height: 1.4;">${data.caption}</div>
+    </div>
+</div>`
+            },
+            footer: {
+                name: 'Page Footer / Author',
+                desc: 'A subtle sign-off at the bottom of your module page.',
+                fields: [
+                    { id: 'name', label: 'Author Name', type: 'text', default: 'Prof. A. Dumbledore' },
+                    { id: 'text', label: 'Extra Text', type: 'text', default: 'Department of Magic | Fall Semester 2024' }
+                ],
+                generate: (data) => `
+<div style="border-top: 1px solid #ccc; margin-top: 50px; padding-top: 20px; text-align: center; color: #888; font-family: inherit; box-sizing: border-box; max-width: 100%; font-size: 0.85em;">
+    <p style="margin: 0 0 5px 0;"><strong>${data.name}</strong></p>
+    <p style="margin: 0;">${data.text}</p>
+</div>`
+            },
+
+            // --- 36-40 BRAND NEW ID BEST PRACTICE ADDITIONS ---
+            learningObjectives: {
+                name: 'Learning Objectives',
+                desc: 'Clearly state what students will learn (Aligns with Bloom\'s Taxonomy).',
+                fields: [
+                    { id: 'title', label: 'Title', type: 'text', default: 'By the end of this module, you will be able to:' },
+                    { id: 'obj1', label: 'Objective 1', type: 'text', default: 'Identify the key principles of instructional design.' },
+                    { id: 'obj2', label: 'Objective 2', type: 'text', default: 'Apply cognitive load theory to multimedia presentations.' },
+                    { id: 'obj3', label: 'Objective 3', type: 'text', default: 'Evaluate the accessibility of a Canvas page.' },
+                    { id: 'color', label: 'Theme Color', type: 'color', default: '#0055a4' }
+                ],
+                generate: (data) => `
+<div style="border: 2px solid ${data.color}; padding: 25px; border-radius: 8px; margin: 25px 0; background-color: #ffffff; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+    <h3 style="margin-top: 0; color: ${data.color}; display: flex; align-items: center; font-size: 1.3em;">
+        <span style="margin-right: 12px; font-size: 1.2em;">🎯</span> ${data.title}
+    </h3>
+    <ul style="padding-left: 20px; margin-bottom: 0; color: #444; font-size: 1.05em; line-height: 1.6;">
+        <li style="margin-bottom: 10px;"><strong>${data.obj1.split(' ')[0]}</strong> ${data.obj1.substring(data.obj1.indexOf(' ') + 1)}</li>
+        <li style="margin-bottom: 10px;"><strong>${data.obj2.split(' ')[0]}</strong> ${data.obj2.substring(data.obj2.indexOf(' ') + 1)}</li>
+        <li><strong>${data.obj3.split(' ')[0]}</strong> ${data.obj3.substring(data.obj3.indexOf(' ') + 1)}</li>
+    </ul>
+</div>`
+            },
+            knowledgeCheck: {
+                name: 'Knowledge Check (Self-Test)',
+                desc: 'A question prompt with a hidden answer for active recall and self-reflection.',
+                fields: [
+                    { id: 'question', label: 'Question', type: 'textarea', default: 'What is the main difference between formative and summative assessment?' },
+                    { id: 'answer', label: 'Answer (Hidden)', type: 'textarea', default: 'Formative assessment monitors learning during the process, while summative assessment evaluates learning at the end of an instructional unit.' },
+                    { id: 'color', label: 'Theme Color', type: 'color', default: '#e65100' }
+                ],
+                generate: (data) => `
+<div style="background-color: #fdf5e6; border-left: 6px solid ${data.color}; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <h4 style="margin: 0 0 10px 0; color: ${data.color}; font-size: 1.1em;">🧠 Knowledge Check</h4>
+    <p style="margin: 0 0 15px 0; color: #333; font-weight: bold; line-height: 1.5;">${data.question}</p>
+    <details style="background-color: #fff; border: 1px solid #e0e0e0; border-radius: 6px; box-sizing: border-box;">
+        <summary style="padding: 10px 15px; font-weight: bold; color: ${data.color}; cursor: pointer; outline: none; box-sizing: border-box;">Show Answer</summary>
+        <div style="padding: 15px; border-top: 1px solid #e0e0e0; color: #555; line-height: 1.5; box-sizing: border-box;">${data.answer}</div>
+    </details>
+</div>`
+            },
+            prerequisites: {
+                name: 'Prerequisites / Before You Begin',
+                desc: 'Scaffolding element alerting students to required prior knowledge or tasks.',
+                fields: [
+                    { id: 'title', label: 'Title', type: 'text', default: 'Before You Begin:' },
+                    { id: 'task1', label: 'Task/Skill 1', type: 'text', default: 'Complete the "Welcome to the Course" module.' },
+                    { id: 'task2', label: 'Task/Skill 2', type: 'text', default: 'Install the required software package.' }
+                ],
+                generate: (data) => `
+<div style="display: flex; flex-wrap: wrap; align-items: center; background-color: #f5f5f5; border: 1px solid #ddd; padding: 15px 20px; border-radius: 6px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <div style="font-size: 2em; margin-right: 20px; flex-shrink: 0;">🛑</div>
+    <div style="flex: 1; min-width: 200px; box-sizing: border-box;">
+        <h4 style="margin: 0 0 5px 0; color: #333; text-transform: uppercase; font-size: 0.9em; letter-spacing: 1px;">${data.title}</h4>
+        <ul style="margin: 0; padding-left: 20px; color: #555; line-height: 1.5;">
+            <li>${data.task1}</li>
+            <li>${data.task2}</li>
+        </ul>
+    </div>
+</div>`
+            },
+            readWatchList: {
+                name: 'Read & Watch Assignment',
+                desc: 'A dual-coded layout combining reading and video tasks together.',
+                fields: [
+                    { id: 'readTitle', label: 'Read Title', type: 'text', default: '📖 To Read:' },
+                    { id: 'readText', label: 'Reading Item', type: 'text', default: 'Chapter 4 in the textbook (pages 45-60).' },
+                    { id: 'watchTitle', label: 'Watch Title', type: 'text', default: '📺 To Watch:' },
+                    { id: 'watchText', label: 'Watching Item', type: 'text', default: 'The 10-minute video lecture on Constructivism.' },
+                    { id: 'color', label: 'Theme Color', type: 'color', default: '#4a148c' }
+                ],
+                generate: (data) => `
+<div style="display: flex; flex-wrap: wrap; gap: 20px; margin: 25px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <div style="flex: 1; min-width: 250px; background-color: #fff; border-top: 4px solid ${data.color}; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); box-sizing: border-box;">
+        <h4 style="margin: 0 0 10px 0; color: ${data.color}; font-size: 1.1em;">${data.readTitle}</h4>
+        <p style="margin: 0; color: #444; line-height: 1.5;">${data.readText}</p>
+    </div>
+    <div style="flex: 1; min-width: 250px; background-color: #fff; border-top: 4px solid ${data.color}; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); box-sizing: border-box;">
+        <h4 style="margin: 0 0 10px 0; color: ${data.color}; font-size: 1.1em;">${data.watchTitle}</h4>
+        <p style="margin: 0; color: #444; line-height: 1.5;">${data.watchText}</p>
+    </div>
+</div>`
+            },
+            vocabularyGrid: {
+                name: 'Key Terms Grid',
+                desc: 'Reduces cognitive load by organizing new vocabulary into a scannable grid.',
+                fields: [
+                    { id: 'term1', label: 'Term 1', type: 'text', default: 'Scaffolding' },
+                    { id: 'def1', label: 'Definition 1', type: 'textarea', default: 'Providing temporary, adjustable support to a learner.' },
+                    { id: 'term2', label: 'Term 2', type: 'text', default: 'Pedagogy' },
+                    { id: 'def2', label: 'Definition 2', type: 'textarea', default: 'The method and practice of teaching.' },
+                    { id: 'color', label: 'Accent Color', type: 'color', default: '#00796b' }
+                ],
+                generate: (data) => `
+<div style="display: flex; flex-wrap: wrap; gap: 15px; margin: 25px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <div style="flex: 1; min-width: 200px; border: 1px solid #eee; border-radius: 6px; padding: 15px; background-color: #fafafa; box-sizing: border-box;">
+        <div style="color: ${data.color}; font-weight: bold; margin-bottom: 5px; font-size: 1.1em; border-bottom: 2px solid ${data.color}; display: inline-block; padding-bottom: 2px;">${data.term1}</div>
+        <div style="color: #555; font-size: 0.95em; line-height: 1.5; margin-top: 5px;">${data.def1}</div>
+    </div>
+    <div style="flex: 1; min-width: 200px; border: 1px solid #eee; border-radius: 6px; padding: 15px; background-color: #fafafa; box-sizing: border-box;">
+        <div style="color: ${data.color}; font-weight: bold; margin-bottom: 5px; font-size: 1.1em; border-bottom: 2px solid ${data.color}; display: inline-block; padding-bottom: 2px;">${data.term2}</div>
+        <div style="color: #555; font-size: 0.95em; line-height: 1.5; margin-top: 5px;">${data.def2}</div>
+    </div>
+</div>`
+            }
+        };
+
+        // State
+        let currentElementId = null;
+        let currentValues = {};
+        let globalFontSize = '16';
+
+        // DOM Elements
+        const galleryView = document.getElementById('galleryView');
+        const editorView = document.getElementById('editorView');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const editorPanel = document.getElementById('editorPanel');
+        const previewArea = document.getElementById('previewArea');
+        const codeArea = document.getElementById('codeArea');
+        const elementTypeSwitch = document.getElementById('elementTypeSwitch');
+
+        // Initialize
+        function init() {
+            buildGallery();
+            populateSwitcher();
+        }
+
+        // 1. Build the Gallery Landing Page
+        function buildGallery() {
+            galleryGrid.innerHTML = '';
+            
+            for (const [id, config] of Object.entries(elements)) {
+                // Get default html for thumbnail
+                const defaultData = {};
+                config.fields.forEach(f => defaultData[f.id] = f.default);
+                const sampleHTML = config.generate(defaultData);
+
+                const card = document.createElement('div');
+                card.className = 'gallery-card';
+                card.onclick = () => showEditor(id);
+
+                card.innerHTML = `
+                    <div class="card-thumb-container">
+                        <div class="card-thumb-scale">
+                            ${sampleHTML}
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <h3>${config.name}</h3>
+                        <p>${config.desc}</p>
+                    </div>
+                `;
+                galleryGrid.appendChild(card);
+            }
+        }
+
+        // Populate the dropdown in the editor sidebar
+        function populateSwitcher() {
+            elementTypeSwitch.innerHTML = '';
+            for (const [id, config] of Object.entries(elements)) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.innerText = config.name;
+                elementTypeSwitch.appendChild(opt);
+            }
+        }
+
+        // 2. Navigation Functions
+        function showGallery() {
+            editorView.classList.add('d-none');
+            galleryView.classList.remove('d-none');
+        }
+
+        function showEditor(elementId) {
+            currentElementId = elementId;
+            elementTypeSwitch.value = elementId;
+            
+            galleryView.classList.add('d-none');
+            editorView.classList.remove('d-none');
+            
+            buildEditor();
+        }
+
+        function switchElement(newElementId) {
+            currentElementId = newElementId;
+            buildEditor();
+        }
+
+        // 3. Build the Editor Form dynamically
+        function buildEditor() {
+            const config = elements[currentElementId];
+            editorPanel.innerHTML = '';
+            currentValues = {};
+            currentValues.baseFontSize = globalFontSize;
+
+            // Global Font Size Control
+            const fsGroup = document.createElement('div');
+            fsGroup.className = 'form-group';
+            fsGroup.style.paddingBottom = '15px';
+            fsGroup.style.borderBottom = '1px solid var(--border)';
+            fsGroup.style.marginBottom = '15px';
+            
+            const fsLabel = document.createElement('label');
+            fsLabel.innerHTML = '⚙️ Base Font Size (px)';
+            fsGroup.appendChild(fsLabel);
+
+            const fsInput = document.createElement('input');
+            fsInput.type = 'number';
+            fsInput.min = '8';
+            fsInput.max = '72';
+            fsInput.value = globalFontSize;
+            
+            fsInput.addEventListener('input', (e) => {
+                globalFontSize = e.target.value;
+                currentValues.baseFontSize = e.target.value;
+                updatePreviewAndCode();
+            });
+            fsGroup.appendChild(fsInput);
+            editorPanel.appendChild(fsGroup);
+
+            config.fields.forEach(field => {
+                currentValues[field.id] = field.default;
+
+                const group = document.createElement('div');
+                group.className = 'form-group';
+                
+                const label = document.createElement('label');
+                label.innerText = field.label;
+                group.appendChild(label);
+
+                let input;
+                if (field.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.rows = 4;
+                } else if (field.type === 'select') {
+                    input = document.createElement('select');
+                    field.options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.innerText = opt.charAt(0).toUpperCase() + opt.slice(1);
+                        input.appendChild(option);
+                    });
+                } else {
+                    input = document.createElement('input');
+                    input.type = field.type;
+                    if(field.type === 'number') {
+                        input.min = "-360";
+                        input.max = "1000";
+                    }
+                }
+
+                input.value = field.default;
+                input.id = `input_${field.id}`;
+                
+                // Update preview on input
+                input.addEventListener('input', (e) => {
+                    currentValues[field.id] = e.target.value;
+                    updatePreviewAndCode();
+                });
+
+                group.appendChild(input);
+                editorPanel.appendChild(group);
+            });
+
+            updatePreviewAndCode();
+        }
+
+        // 4. Update the Live Preview and HTML Code output
+        function updatePreviewAndCode() {
+            const config = elements[currentElementId];
+            let htmlString = config.generate(currentValues).trim();
+            
+            // Inject base font size into the outermost style attribute
+            if (currentValues.baseFontSize) {
+                htmlString = htmlString.replace(/style="/i, `style="font-size: ${currentValues.baseFontSize}px; `);
+            }
+            
+            previewArea.innerHTML = htmlString;
+            codeArea.textContent = htmlString;
+            
+            resetCopyButtons();
+        }
+
+        function resetCopyButtons() {
+            const sidebarBtn = document.getElementById('sidebarCopyBtn');
+            const inlineBtn = document.getElementById('inlineCopyBtn');
+            
+            sidebarBtn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg> Copy HTML to Clipboard';
+            sidebarBtn.classList.remove('copied');
+            
+            inlineBtn.textContent = 'Copy';
+            inlineBtn.classList.remove('copied');
+        }
+
+        // 5. Copy Code to Clipboard
+        function copyCode() {
+            const codeText = codeArea.textContent;
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = codeText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                const sidebarBtn = document.getElementById('sidebarCopyBtn');
+                const inlineBtn = document.getElementById('inlineCopyBtn');
+                
+                sidebarBtn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied Successfully!';
+                sidebarBtn.classList.add('copied');
+                
+                inlineBtn.textContent = 'Copied!';
+                inlineBtn.classList.add('copied');
+
+                setTimeout(resetCopyButtons, 2500);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                const sidebarBtn = document.getElementById('sidebarCopyBtn');
+                sidebarBtn.textContent = 'Failed!';
+                setTimeout(resetCopyButtons, 2500);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Run initialization
+        init();
+    </script>
+</body>
+</html>
