@@ -1043,7 +1043,7 @@ ${parts.join('\n')}
                     { id: 'rotation', label: 'Rotation (deg)', type: 'number', default: '3' }
                 ],
                 generate: (data) => `
-<div style="text-align: center; margin: 40px 0; box-sizing: border-box; max-width: 100%; overflow: hidden;">
+<div style="text-align: center; margin: 40px 0; box-sizing: border-box; max-width: 100%;">
     <div style="background-color: white; padding: 15px 15px 40px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: inline-block; transform: rotate(${data.rotation}deg); font-family: 'Comic Sans MS', cursive, sans-serif; border: 1px solid #ddd; box-sizing: border-box; max-width: 100%;">
         <img src="${data.url}" alt="Polaroid photo" style="max-width: 100%; width: 250px; height: auto; object-fit: cover; border: 1px solid #eee; display: block;">
         <div style="text-align: center; margin-top: 15px; color: #333; font-size: 1.1em; line-height: 1.4;">${data.caption}</div>
