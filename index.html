@@ -295,6 +295,73 @@
 
         .d-none { display: none !important; }
 
+        /* --- Dynamic List / Pairs Field Types --- */
+        .list-item-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+        .list-item-row input {
+            flex: 1;
+        }
+        .list-item-remove {
+            flex-shrink: 0;
+            background: none;
+            border: 1px solid #ccc;
+            color: #999;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 0 8px;
+            font-size: 1.1rem;
+            line-height: 1;
+            height: 32px;
+        }
+        .list-item-remove:hover {
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+        .add-list-item-btn {
+            width: 100%;
+            padding: 0.4rem;
+            background: #f4f6f8;
+            border: 1px dashed #aaa;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #555;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .add-list-item-btn:hover {
+            background: #e8eaf0;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .pair-group {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            background: #fafafa;
+        }
+        .pair-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            color: #777;
+            font-weight: bold;
+        }
+        .pair-group-header .list-item-remove {
+            padding: 0 6px;
+            font-size: 0.9rem;
+            height: 26px;
+        }
+        .pair-group .form-group {
+            margin-bottom: 6px;
+        }
+
         @media (max-width: 768px) {
             #editorView {
                 flex-direction: column;
