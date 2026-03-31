@@ -295,6 +295,73 @@
 
         .d-none { display: none !important; }
 
+        /* --- Dynamic List / Pairs Field Types --- */
+        .list-item-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+        .list-item-row input {
+            flex: 1;
+        }
+        .list-item-remove {
+            flex-shrink: 0;
+            background: none;
+            border: 1px solid #ccc;
+            color: #999;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 0 8px;
+            font-size: 1.1rem;
+            line-height: 1;
+            height: 32px;
+        }
+        .list-item-remove:hover {
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+        .add-list-item-btn {
+            width: 100%;
+            padding: 0.4rem;
+            background: #f4f6f8;
+            border: 1px dashed #aaa;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #555;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .add-list-item-btn:hover {
+            background: #e8eaf0;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .pair-group {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            background: #fafafa;
+        }
+        .pair-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            color: #777;
+            font-weight: bold;
+        }
+        .pair-group-header .list-item-remove {
+            padding: 0 6px;
+            font-size: 0.9rem;
+            height: 26px;
+        }
+        .pair-group .form-group {
+            margin-bottom: 6px;
+        }
+
         @media (max-width: 768px) {
             #editorView {
                 flex-direction: column;
@@ -507,26 +574,19 @@
                 name: 'Step-by-Step List',
                 desc: 'A visual numbered sequence for instructions.',
                 fields: [
-                    { id: 'step1', label: 'Step 1 Text', type: 'text', default: 'Read the syllabus document carefully.' },
-                    { id: 'step2', label: 'Step 2 Text', type: 'text', default: 'Post your introduction in the discussion forum.' },
-                    { id: 'step3', label: 'Step 3 Text', type: 'text', default: 'Complete the Week 1 Quiz.' },
+                    { id: 'items', label: 'Steps', type: 'list', placeholder: 'Enter step text...', defaultItems: ['Read the syllabus document carefully.', 'Post your introduction in the discussion forum.', 'Complete the Week 1 Quiz.'] },
                     { id: 'color', label: 'Number Color', type: 'color', default: '#0055a4' }
                 ],
-                generate: (data) => `
-<div style="margin: 20px 0; font-family: inherit; color: #333; box-sizing: border-box; max-width: 100%;">
+                generate: (data) => {
+                    const items = Array.isArray(data.items) ? data.items : [data.items];
+                    const rows = items.map((step, i) => `
     <div style="display: flex; margin-bottom: 12px; align-items: flex-start;">
-        <div style="background-color: ${data.color}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0;">1</div>
-        <div style="padding-top: 4px; line-height: 1.4;">${data.step1}</div>
-    </div>
-    <div style="display: flex; margin-bottom: 12px; align-items: flex-start;">
-        <div style="background-color: ${data.color}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0;">2</div>
-        <div style="padding-top: 4px; line-height: 1.4;">${data.step2}</div>
-    </div>
-    <div style="display: flex; align-items: flex-start;">
-        <div style="background-color: ${data.color}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0;">3</div>
-        <div style="padding-top: 4px; line-height: 1.4;">${data.step3}</div>
-    </div>
-</div>`
+        <div style="background-color: ${data.color}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0;">${i + 1}</div>
+        <div style="padding-top: 4px; line-height: 1.4;">${step}</div>
+    </div>`).join('');
+                    return `<div style="margin: 20px 0; font-family: inherit; color: #333; box-sizing: border-box; max-width: 100%;">${rows}
+</div>`;
+                }
             },
             badge: {
                 name: 'Pill Badge',
@@ -585,22 +645,21 @@
                 desc: 'A distinct list box using checkmarks.',
                 fields: [
                     { id: 'title', label: 'Box Title', type: 'text', default: 'Key Takeaways' },
-                    { id: 'item1', label: 'Item 1', type: 'text', default: 'Always check the rubric.' },
-                    { id: 'item2', label: 'Item 2', type: 'text', default: 'Submit assignments in PDF format.' },
-                    { id: 'item3', label: 'Item 3', type: 'text', default: 'Late work is penalized by 10% per day.' },
+                    { id: 'items', label: 'Items', type: 'list', placeholder: 'Enter takeaway...', defaultItems: ['Always check the rubric.', 'Submit assignments in PDF format.', 'Late work is penalized by 10% per day.'] },
                     { id: 'color', label: 'Accent Color', type: 'color', default: '#2e7d32' }
                 ],
-                generate: (data) => `
-<div style="border: 2px dashed ${data.color}; padding: 20px; border-radius: 8px; background-color: #f1f8e9; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; color: #333;">
+                generate: (data) => {
+                    const items = Array.isArray(data.items) ? data.items : [data.items];
+                    const listItems = items.map((item, i) => `        <li style="${i < items.length - 1 ? 'margin-bottom: 8px; ' : ''}line-height: 1.4;">✅ ${item}</li>`).join('\n');
+                    return `<div style="border: 2px dashed ${data.color}; padding: 20px; border-radius: 8px; background-color: #f1f8e9; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; color: #333;">
     <h3 style="margin-top: 0; color: ${data.color}; display: flex; align-items: center;">
         <span style="margin-right: 8px;">🎯</span> ${data.title}
     </h3>
     <ul style="list-style-type: none; padding-left: 0; margin-bottom: 0;">
-        <li style="margin-bottom: 8px; line-height: 1.4;">✅ ${data.item1}</li>
-        <li style="margin-bottom: 8px; line-height: 1.4;">✅ ${data.item2}</li>
-        <li style="line-height: 1.4;">✅ ${data.item3}</li>
+${listItems}
     </ul>
-</div>`
+</div>`;
+                }
             },
             profile: {
                 name: 'Instructor Profile',
@@ -706,26 +765,19 @@
                 desc: 'A stylized to-do list for modules or assignments.',
                 fields: [
                     { id: 'title', label: 'Checklist Title', type: 'text', default: 'Module 1 To-Do:' },
-                    { id: 'item1', label: 'Task 1', type: 'text', default: 'Read Chapter 1' },
-                    { id: 'item2', label: 'Task 2', type: 'text', default: 'Participate in Discussion' },
-                    { id: 'item3', label: 'Task 3', type: 'text', default: 'Submit Assignment 1' }
+                    { id: 'items', label: 'Tasks', type: 'list', placeholder: 'Enter task...', defaultItems: ['Read Chapter 1', 'Participate in Discussion', 'Submit Assignment 1'] }
                 ],
-                generate: (data) => `
-<div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 20px 0; background-color: #ffffff; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                generate: (data) => {
+                    const items = Array.isArray(data.items) ? data.items : [data.items];
+                    const rows = items.map((item, i) => `    <div style="display: flex; align-items: flex-start;${i < items.length - 1 ? ' margin-bottom: 10px;' : ''}">
+        <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 4px; margin-right: 12px; flex-shrink: 0; margin-top: 2px;"></span>
+        <span style="color: #444; font-size: 1em; line-height: 1.4;">${item}</span>
+    </div>`).join('\n');
+                    return `<div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 20px 0; background-color: #ffffff; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
     <h4 style="margin: 0 0 15px 0; color: #333; font-size: 1.2em; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">📋 ${data.title}</h4>
-    <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
-        <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 4px; margin-right: 12px; flex-shrink: 0; margin-top: 2px;"></span>
-        <span style="color: #444; font-size: 1em; line-height: 1.4;">${data.item1}</span>
-    </div>
-    <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
-        <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 4px; margin-right: 12px; flex-shrink: 0; margin-top: 2px;"></span>
-        <span style="color: #444; font-size: 1em; line-height: 1.4;">${data.item2}</span>
-    </div>
-    <div style="display: flex; align-items: flex-start;">
-        <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 4px; margin-right: 12px; flex-shrink: 0; margin-top: 2px;"></span>
-        <span style="color: #444; font-size: 1em; line-height: 1.4;">${data.item3}</span>
-    </div>
-</div>`
+${rows}
+</div>`;
+                }
             },
             testimonial: {
                 name: 'Testimonial / Review',
@@ -785,22 +837,23 @@
                 name: 'Resource Links',
                 desc: 'A styled list of downloadable files or external links.',
                 fields: [
-                    { id: 'res1', label: 'Resource 1 Name', type: 'text', default: 'Course Syllabus (PDF)' },
-                    { id: 'url1', label: 'Resource 1 URL', type: 'url', default: 'https://' },
-                    { id: 'res2', label: 'Resource 2 Name', type: 'text', default: 'Lecture Slides (PPTX)' },
-                    { id: 'url2', label: 'Resource 2 URL', type: 'url', default: 'https://' },
+                    { id: 'pairs', label: 'Resources', type: 'pairs', labels: ['Resource Name', 'URL'], types: ['text', 'url'], addLabel: 'Resource', defaultItems: [['Course Syllabus (PDF)', 'https://'], ['Lecture Slides (PPTX)', 'https://']] },
                     { id: 'color', label: 'Accent Color', type: 'color', default: '#0055a4' }
                 ],
-                generate: (data) => `
-<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+                generate: (data) => {
+                    const pairs = Array.isArray(data.pairs) ? data.pairs : [];
+                    const icons = ['📄', '📎', '📋', '📊', '📁', '🔗'];
+                    const links = pairs.map((pair, i) => {
+                        const isLast = i === pairs.length - 1;
+                        return `    <a href="${pair[1] || '#'}" style="display: block; padding: 12px 15px;${!isLast ? ' margin-bottom: 8px;' : ''} background-color: #f4f6f8; border-left: 4px solid ${data.color}; color: #333; text-decoration: none; border-radius: 0 6px 6px 0; transition: background-color 0.2s; box-sizing: border-box;">
+        ${icons[i % icons.length]} <span style="margin-left: 8px; font-weight: bold; text-decoration: underline;">${pair[0] || ''}</span>
+    </a>`;
+                    }).join('\n');
+                    return `<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
     <h4 style="margin: 0 0 10px 0; color: #333;">Downloads & Links</h4>
-    <a href="${data.url1}" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f4f6f8; border-left: 4px solid ${data.color}; color: #333; text-decoration: none; border-radius: 0 6px 6px 0; transition: background-color 0.2s; box-sizing: border-box;">
-        📄 <span style="margin-left: 8px; font-weight: bold; text-decoration: underline;">${data.res1}</span>
-    </a>
-    <a href="${data.url2}" style="display: block; padding: 12px 15px; background-color: #f4f6f8; border-left: 4px solid ${data.color}; color: #333; text-decoration: none; border-radius: 0 6px 6px 0; transition: background-color 0.2s; box-sizing: border-box;">
-        📎 <span style="margin-left: 8px; font-weight: bold; text-decoration: underline;">${data.res2}</span>
-    </a>
-</div>`
+${links}
+</div>`;
+                }
             },
             gridGallery: {
                 name: 'Grid Gallery (3 Images)',
@@ -853,43 +906,38 @@
             },
             faq: {
                 name: 'Q&A / FAQ Toggle',
-                desc: 'Two stacked accordions perfect for Frequently Asked Questions.',
+                desc: 'Stacked accordions for Frequently Asked Questions.',
                 fields: [
-                    { id: 'q1', label: 'Question 1', type: 'text', default: 'How is this course graded?' },
-                    { id: 'a1', label: 'Answer 1', type: 'textarea', default: 'Grades are based 50% on assignments and 50% on the final exam.' },
-                    { id: 'q2', label: 'Question 2', type: 'text', default: 'Are there live lectures?' },
-                    { id: 'a2', label: 'Answer 2', type: 'textarea', default: 'No, this course is completely asynchronous.' }
+                    { id: 'pairs', label: 'Questions & Answers', type: 'pairs', labels: ['Question', 'Answer'], types: ['text', 'textarea'], addLabel: 'Q&A Pair', defaultItems: [['How is this course graded?', 'Grades are based 50% on assignments and 50% on the final exam.'], ['Are there live lectures?', 'No, this course is completely asynchronous.']] }
                 ],
-                generate: (data) => `
-<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
-    <details style="margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; box-sizing: border-box;">
-        <summary style="padding: 15px; background-color: #fafafa; font-weight: bold; cursor: pointer; color: #333; outline: none; box-sizing: border-box;">❓ ${data.q1}</summary>
-        <div style="padding: 15px; border-top: 1px solid #ddd; background-color: #fff; line-height: 1.5; color: #444; box-sizing: border-box;">${data.a1}</div>
-    </details>
-    <details style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; box-sizing: border-box;">
-        <summary style="padding: 15px; background-color: #fafafa; font-weight: bold; cursor: pointer; color: #333; outline: none; box-sizing: border-box;">❓ ${data.q2}</summary>
-        <div style="padding: 15px; border-top: 1px solid #ddd; background-color: #fff; line-height: 1.5; color: #444; box-sizing: border-box;">${data.a2}</div>
-    </details>
-</div>`
+                generate: (data) => {
+                    const pairs = Array.isArray(data.pairs) ? data.pairs : [];
+                    const pairsHTML = pairs.map((pair, i) => `    <details style="${i < pairs.length - 1 ? 'margin-bottom: 10px; ' : ''}border: 1px solid #ddd; border-radius: 6px; overflow: hidden; box-sizing: border-box;">
+        <summary style="padding: 15px; background-color: #fafafa; font-weight: bold; cursor: pointer; color: #333; outline: none; box-sizing: border-box;">❓ ${pair[0] || ''}</summary>
+        <div style="padding: 15px; border-top: 1px solid #ddd; background-color: #fff; line-height: 1.5; color: #444; box-sizing: border-box;">${pair[1] || ''}</div>
+    </details>`).join('\n');
+                    return `<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+${pairsHTML}
+</div>`;
+                }
             },
             toc: {
                 name: 'Table of Contents',
                 desc: 'A quick navigation box for long pages.',
                 fields: [
                     { id: 'title', label: 'Title', type: 'text', default: 'In this module:' },
-                    { id: 'item1', label: 'Item 1', type: 'text', default: '1. Introduction' },
-                    { id: 'item2', label: 'Item 2', type: 'text', default: '2. Core Concepts' },
-                    { id: 'item3', label: 'Item 3', type: 'text', default: '3. Summary & Quiz' }
+                    { id: 'items', label: 'Items', type: 'list', placeholder: 'Enter section...', defaultItems: ['1. Introduction', '2. Core Concepts', '3. Summary & Quiz'] }
                 ],
-                generate: (data) => `
-<div style="background-color: #f4f6f8; border: 1px solid #ccd1d9; padding: 20px; border-radius: 8px; margin: 20px 0; display: inline-block; min-width: 250px; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+                generate: (data) => {
+                    const items = Array.isArray(data.items) ? data.items : [data.items];
+                    const listItems = items.map(item => `        <li><a href="#" style="color: #0055a4; text-decoration: none;">${item}</a></li>`).join('\n');
+                    return `<div style="background-color: #f4f6f8; border: 1px solid #ccd1d9; padding: 20px; border-radius: 8px; margin: 20px 0; display: inline-block; min-width: 250px; font-family: inherit; box-sizing: border-box; max-width: 100%;">
     <h4 style="margin: 0 0 15px 0; color: #333; border-bottom: 2px solid #ddd; padding-bottom: 5px;">📑 ${data.title}</h4>
     <ul style="list-style-type: none; padding: 0; margin: 0; line-height: 1.8;">
-        <li><a href="#" style="color: #0055a4; text-decoration: none;">${data.item1}</a></li>
-        <li><a href="#" style="color: #0055a4; text-decoration: none;">${data.item2}</a></li>
-        <li><a href="#" style="color: #0055a4; text-decoration: none;">${data.item3}</a></li>
+${listItems}
     </ul>
-</div>`
+</div>`;
+                }
             },
             audioPlayer: {
                 name: 'Audio Player Wrapper',
@@ -969,19 +1017,22 @@
                 name: 'Horizontal Flow / Steps',
                 desc: 'A left-to-right process diagram.',
                 fields: [
-                    { id: 's1', label: 'Step 1', type: 'text', default: 'Drafting' },
-                    { id: 's2', label: 'Step 2', type: 'text', default: 'Peer Review' },
-                    { id: 's3', label: 'Step 3', type: 'text', default: 'Final Submit' },
+                    { id: 'items', label: 'Steps', type: 'list', placeholder: 'Enter step...', defaultItems: ['Drafting', 'Peer Review', 'Final Submit'] },
                     { id: 'color', label: 'Theme Color', type: 'color', default: '#0055a4' }
                 ],
-                generate: (data) => `
-<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin: 30px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; text-align: center;">
-    <div style="background-color: ${data.color}; color: white; padding: 10px 20px; border-radius: 999px; font-weight: bold; flex: 1; min-width: 120px; box-sizing: border-box;">${data.s1}</div>
-    <div style="color: ${data.color}; font-size: 1.5em; font-weight: bold; line-height: 1;">➔</div>
-    <div style="background-color: ${data.color}; color: white; padding: 10px 20px; border-radius: 999px; font-weight: bold; flex: 1; min-width: 120px; box-sizing: border-box;">${data.s2}</div>
-    <div style="color: ${data.color}; font-size: 1.5em; font-weight: bold; line-height: 1;">➔</div>
-    <div style="background-color: ${data.color}; color: white; padding: 10px 20px; border-radius: 999px; font-weight: bold; flex: 1; min-width: 120px; box-sizing: border-box;">${data.s3}</div>
-</div>`
+                generate: (data) => {
+                    const items = Array.isArray(data.items) ? data.items : [data.items];
+                    const parts = [];
+                    items.forEach((step, i) => {
+                        parts.push(`    <div style="background-color: ${data.color}; color: white; padding: 10px 20px; border-radius: 999px; font-weight: bold; flex: 1; min-width: 120px; box-sizing: border-box;">${step}</div>`);
+                        if (i < items.length - 1) {
+                            parts.push(`    <div style="color: ${data.color}; font-size: 1.5em; font-weight: bold; line-height: 1;">➔</div>`);
+                        }
+                    });
+                    return `<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin: 30px 0; font-family: inherit; box-sizing: border-box; max-width: 100%; text-align: center;">
+${parts.join('\n')}
+</div>`;
+                }
             },
             polaroidImage: {
                 name: 'Polaroid Style Photo',
@@ -1019,22 +1070,27 @@
                 desc: 'Clearly state what students will learn (Aligns with Bloom\'s Taxonomy).',
                 fields: [
                     { id: 'title', label: 'Title', type: 'text', default: 'By the end of this module, you will be able to:' },
-                    { id: 'obj1', label: 'Objective 1', type: 'text', default: 'Identify the key principles of instructional design.' },
-                    { id: 'obj2', label: 'Objective 2', type: 'text', default: 'Apply cognitive load theory to multimedia presentations.' },
-                    { id: 'obj3', label: 'Objective 3', type: 'text', default: 'Evaluate the accessibility of a Canvas page.' },
+                    { id: 'items', label: 'Objectives', type: 'list', placeholder: 'Enter objective...', defaultItems: ['Identify the key principles of instructional design.', 'Apply cognitive load theory to multimedia presentations.', 'Evaluate the accessibility of a Canvas page.'] },
                     { id: 'color', label: 'Theme Color', type: 'color', default: '#0055a4' }
                 ],
-                generate: (data) => `
-<div style="border: 2px solid ${data.color}; padding: 25px; border-radius: 8px; margin: 25px 0; background-color: #ffffff; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                generate: (data) => {
+                    const items = Array.isArray(data.items) ? data.items : [data.items];
+                    const listItems = items.map((obj, i) => {
+                        const trimmed = obj.trim();
+                        const spaceIdx = trimmed.indexOf(' ');
+                        const first = spaceIdx > -1 ? trimmed.substring(0, spaceIdx) : trimmed;
+                        const rest = spaceIdx > -1 ? trimmed.substring(spaceIdx + 1) : '';
+                        return `        <li style="${i < items.length - 1 ? 'margin-bottom: 10px;' : ''}"><strong>${first}</strong>${rest ? ' ' + rest : ''}</li>`;
+                    }).join('\n');
+                    return `<div style="border: 2px solid ${data.color}; padding: 25px; border-radius: 8px; margin: 25px 0; background-color: #ffffff; font-family: inherit; box-sizing: border-box; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
     <h3 style="margin-top: 0; color: ${data.color}; display: flex; align-items: center; font-size: 1.3em;">
         <span style="margin-right: 12px; font-size: 1.2em;">🎯</span> ${data.title}
     </h3>
     <ul style="padding-left: 20px; margin-bottom: 0; color: #444; font-size: 1.05em; line-height: 1.6;">
-        <li style="margin-bottom: 10px;"><strong>${data.obj1.split(' ')[0]}</strong> ${data.obj1.substring(data.obj1.indexOf(' ') + 1)}</li>
-        <li style="margin-bottom: 10px;"><strong>${data.obj2.split(' ')[0]}</strong> ${data.obj2.substring(data.obj2.indexOf(' ') + 1)}</li>
-        <li><strong>${data.obj3.split(' ')[0]}</strong> ${data.obj3.substring(data.obj3.indexOf(' ') + 1)}</li>
+${listItems}
     </ul>
-</div>`
+</div>`;
+                }
             },
             knowledgeCheck: {
                 name: 'Knowledge Check (Self-Test)',
@@ -1059,20 +1115,21 @@
                 desc: 'Scaffolding element alerting students to required prior knowledge or tasks.',
                 fields: [
                     { id: 'title', label: 'Title', type: 'text', default: 'Before You Begin:' },
-                    { id: 'task1', label: 'Task/Skill 1', type: 'text', default: 'Complete the "Welcome to the Course" module.' },
-                    { id: 'task2', label: 'Task/Skill 2', type: 'text', default: 'Install the required software package.' }
+                    { id: 'items', label: 'Tasks / Skills', type: 'list', placeholder: 'Enter task or skill...', defaultItems: ['Complete the "Welcome to the Course" module.', 'Install the required software package.'] }
                 ],
-                generate: (data) => `
-<div style="display: flex; flex-wrap: wrap; align-items: center; background-color: #f5f5f5; border: 1px solid #ddd; padding: 15px 20px; border-radius: 6px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+                generate: (data) => {
+                    const items = Array.isArray(data.items) ? data.items : [data.items];
+                    const listItems = items.map(task => `            <li>${task}</li>`).join('\n');
+                    return `<div style="display: flex; flex-wrap: wrap; align-items: center; background-color: #f5f5f5; border: 1px solid #ddd; padding: 15px 20px; border-radius: 6px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
     <div style="font-size: 2em; margin-right: 20px; flex-shrink: 0;">🛑</div>
     <div style="flex: 1; min-width: 200px; box-sizing: border-box;">
         <h4 style="margin: 0 0 5px 0; color: #333; text-transform: uppercase; font-size: 0.9em; letter-spacing: 1px;">${data.title}</h4>
         <ul style="margin: 0; padding-left: 20px; color: #555; line-height: 1.5;">
-            <li>${data.task1}</li>
-            <li>${data.task2}</li>
+${listItems}
         </ul>
     </div>
-</div>`
+</div>`;
+                }
             },
             readWatchList: {
                 name: 'Read & Watch Assignment',
@@ -1100,23 +1157,19 @@
                 name: 'Key Terms Grid',
                 desc: 'Reduces cognitive load by organizing new vocabulary into a scannable grid.',
                 fields: [
-                    { id: 'term1', label: 'Term 1', type: 'text', default: 'Scaffolding' },
-                    { id: 'def1', label: 'Definition 1', type: 'textarea', default: 'Providing temporary, adjustable support to a learner.' },
-                    { id: 'term2', label: 'Term 2', type: 'text', default: 'Pedagogy' },
-                    { id: 'def2', label: 'Definition 2', type: 'textarea', default: 'The method and practice of teaching.' },
+                    { id: 'pairs', label: 'Terms & Definitions', type: 'pairs', labels: ['Term', 'Definition'], types: ['text', 'textarea'], addLabel: 'Term', defaultItems: [['Scaffolding', 'Providing temporary, adjustable support to a learner.'], ['Pedagogy', 'The method and practice of teaching.']] },
                     { id: 'color', label: 'Accent Color', type: 'color', default: '#00796b' }
                 ],
-                generate: (data) => `
-<div style="display: flex; flex-wrap: wrap; gap: 15px; margin: 25px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
-    <div style="flex: 1; min-width: 200px; border: 1px solid #eee; border-radius: 6px; padding: 15px; background-color: #fafafa; box-sizing: border-box;">
-        <div style="color: ${data.color}; font-weight: bold; margin-bottom: 5px; font-size: 1.1em; border-bottom: 2px solid ${data.color}; display: inline-block; padding-bottom: 2px;">${data.term1}</div>
-        <div style="color: #555; font-size: 0.95em; line-height: 1.5; margin-top: 5px;">${data.def1}</div>
-    </div>
-    <div style="flex: 1; min-width: 200px; border: 1px solid #eee; border-radius: 6px; padding: 15px; background-color: #fafafa; box-sizing: border-box;">
-        <div style="color: ${data.color}; font-weight: bold; margin-bottom: 5px; font-size: 1.1em; border-bottom: 2px solid ${data.color}; display: inline-block; padding-bottom: 2px;">${data.term2}</div>
-        <div style="color: #555; font-size: 0.95em; line-height: 1.5; margin-top: 5px;">${data.def2}</div>
-    </div>
-</div>`
+                generate: (data) => {
+                    const pairs = Array.isArray(data.pairs) ? data.pairs : [];
+                    const cards = pairs.map(pair => `    <div style="flex: 1; min-width: 200px; border: 1px solid #eee; border-radius: 6px; padding: 15px; background-color: #fafafa; box-sizing: border-box;">
+        <div style="color: ${data.color}; font-weight: bold; margin-bottom: 5px; font-size: 1.1em; border-bottom: 2px solid ${data.color}; display: inline-block; padding-bottom: 2px;">${pair[0] || ''}</div>
+        <div style="color: #555; font-size: 0.95em; line-height: 1.5; margin-top: 5px;">${pair[1] || ''}</div>
+    </div>`).join('\n');
+                    return `<div style="display: flex; flex-wrap: wrap; gap: 15px; margin: 25px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+${cards}
+</div>`;
+                }
             }
         };
 
@@ -1147,7 +1200,15 @@
             for (const [id, config] of Object.entries(elements)) {
                 // Get default html for thumbnail
                 const defaultData = {};
-                config.fields.forEach(f => defaultData[f.id] = f.default);
+                config.fields.forEach(f => {
+                    if (f.type === 'list') {
+                        defaultData[f.id] = [...f.defaultItems];
+                    } else if (f.type === 'pairs') {
+                        defaultData[f.id] = f.defaultItems.map(p => [...p]);
+                    } else {
+                        defaultData[f.id] = f.default;
+                    }
+                });
                 const sampleHTML = config.generate(defaultData);
 
                 const card = document.createElement('div');
@@ -1234,14 +1295,150 @@
             editorPanel.appendChild(fsGroup);
 
             config.fields.forEach(field => {
-                currentValues[field.id] = field.default;
-
                 const group = document.createElement('div');
                 group.className = 'form-group';
-                
+
                 const label = document.createElement('label');
                 label.innerText = field.label;
                 group.appendChild(label);
+
+                // --- Dynamic list (repeatable single-value items) ---
+                if (field.type === 'list') {
+                    currentValues[field.id] = [...field.defaultItems];
+                    const listContainer = document.createElement('div');
+
+                    const renderListItems = () => {
+                        listContainer.innerHTML = '';
+                        currentValues[field.id].forEach((item, idx) => {
+                            const row = document.createElement('div');
+                            row.className = 'list-item-row';
+
+                            const itemInput = document.createElement('input');
+                            itemInput.type = 'text';
+                            itemInput.value = item;
+                            itemInput.placeholder = field.placeholder || '';
+                            itemInput.addEventListener('input', (e) => {
+                                currentValues[field.id][idx] = e.target.value;
+                                updatePreviewAndCode();
+                            });
+
+                            const removeBtn = document.createElement('button');
+                            removeBtn.className = 'list-item-remove';
+                            removeBtn.type = 'button';
+                            removeBtn.innerHTML = '&times;';
+                            removeBtn.title = 'Remove item';
+                            removeBtn.addEventListener('click', () => {
+                                if (currentValues[field.id].length > 1) {
+                                    currentValues[field.id].splice(idx, 1);
+                                    renderListItems();
+                                    updatePreviewAndCode();
+                                }
+                            });
+
+                            row.appendChild(itemInput);
+                            row.appendChild(removeBtn);
+                            listContainer.appendChild(row);
+                        });
+
+                        const addBtn = document.createElement('button');
+                        addBtn.className = 'add-list-item-btn';
+                        addBtn.type = 'button';
+                        addBtn.textContent = '+ Add Item';
+                        addBtn.addEventListener('click', () => {
+                            currentValues[field.id].push('');
+                            renderListItems();
+                            updatePreviewAndCode();
+                        });
+                        listContainer.appendChild(addBtn);
+                    };
+
+                    renderListItems();
+                    group.appendChild(listContainer);
+                    editorPanel.appendChild(group);
+                    return;
+                }
+
+                // --- Dynamic pairs (repeatable two-value items, e.g. Q&A, term/def) ---
+                if (field.type === 'pairs') {
+                    currentValues[field.id] = field.defaultItems.map(p => [...p]);
+                    const pairsContainer = document.createElement('div');
+                    const subTypes = field.types || field.labels.map(() => 'text');
+
+                    const renderPairs = () => {
+                        pairsContainer.innerHTML = '';
+                        currentValues[field.id].forEach((pair, idx) => {
+                            const pairGroup = document.createElement('div');
+                            pairGroup.className = 'pair-group';
+
+                            const header = document.createElement('div');
+                            header.className = 'pair-group-header';
+                            const headerLabel = document.createElement('span');
+                            headerLabel.textContent = `${field.addLabel || 'Pair'} ${idx + 1}`;
+                            header.appendChild(headerLabel);
+
+                            const removeBtn = document.createElement('button');
+                            removeBtn.className = 'list-item-remove';
+                            removeBtn.type = 'button';
+                            removeBtn.innerHTML = '&times;';
+                            removeBtn.title = 'Remove';
+                            removeBtn.addEventListener('click', () => {
+                                if (currentValues[field.id].length > 1) {
+                                    currentValues[field.id].splice(idx, 1);
+                                    renderPairs();
+                                    updatePreviewAndCode();
+                                }
+                            });
+                            header.appendChild(removeBtn);
+                            pairGroup.appendChild(header);
+
+                            field.labels.forEach((lbl, pairIdx) => {
+                                const fg = document.createElement('div');
+                                fg.className = 'form-group';
+                                const l = document.createElement('label');
+                                l.style.fontSize = '0.8rem';
+                                l.textContent = lbl;
+                                fg.appendChild(l);
+
+                                let inp;
+                                if (subTypes[pairIdx] === 'textarea') {
+                                    inp = document.createElement('textarea');
+                                    inp.rows = 2;
+                                } else {
+                                    inp = document.createElement('input');
+                                    inp.type = subTypes[pairIdx] || 'text';
+                                }
+                                inp.value = pair[pairIdx] || '';
+                                inp.addEventListener('input', (e) => {
+                                    currentValues[field.id][idx][pairIdx] = e.target.value;
+                                    updatePreviewAndCode();
+                                });
+                                fg.appendChild(inp);
+                                pairGroup.appendChild(fg);
+                            });
+
+                            pairsContainer.appendChild(pairGroup);
+                        });
+
+                        const addBtn = document.createElement('button');
+                        addBtn.className = 'add-list-item-btn';
+                        addBtn.type = 'button';
+                        addBtn.textContent = `+ Add ${field.addLabel || 'Pair'}`;
+                        addBtn.addEventListener('click', () => {
+                            currentValues[field.id].push(field.labels.map(() => ''));
+                            renderPairs();
+                            updatePreviewAndCode();
+                        });
+                        pairsContainer.appendChild(addBtn);
+                    };
+
+                    renderPairs();
+                    group.appendChild(pairsContainer);
+                    editorPanel.appendChild(group);
+                    return;
+                }
+
+                // --- Standard field types ---
+                currentValues[field.id] = field.default;
 
                 let input;
                 if (field.type === 'textarea') {
