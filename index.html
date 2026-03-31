@@ -996,22 +996,33 @@ ${listItems}
 </div>`
             },
             flashcard: {
-                name: 'Static Flashcard',
-                desc: 'A prominent card with a term and definition.',
+                name: 'Dynamic Flashcard Set',
+                desc: 'An interactive set of flashcards. Click each card to flip it and reveal the definition. Works on Canvas without JavaScript.',
                 fields: [
-                    { id: 'term', label: 'Term (Top)', type: 'text', default: 'Photosynthesis' },
-                    { id: 'def', label: 'Definition (Bottom)', type: 'textarea', default: 'The process by which green plants and some other organisms use sunlight to synthesize foods from carbon dioxide and water.' },
-                    { id: 'color', label: 'Top Bar Color', type: 'color', default: '#4caf50' }
+                    { id: 'cards', label: 'Flashcards', type: 'pairs', labels: ['Term (Front)', 'Definition (Back)'], types: ['text', 'textarea'], addLabel: 'Card', defaultItems: [['Photosynthesis', 'The process by which green plants and some other organisms use sunlight to synthesize foods from carbon dioxide and water.'], ['Mitosis', 'A type of cell division resulting in two daughter cells each having the same number of chromosomes as the parent cell.'], ['Osmosis', 'The movement of water molecules through a semipermeable membrane from a region of lower solute concentration to a region of higher solute concentration.']] },
+                    { id: 'color', label: 'Card Color', type: 'color', default: '#4caf50' }
                 ],
-                generate: (data) => `
-<div style="max-width: 400px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.1); font-family: inherit; box-sizing: border-box; text-align: center; border: 1px solid #eaeaea;">
-    <div style="background-color: ${data.color}; padding: 30px 20px; color: white; box-sizing: border-box;">
-        <h3 style="margin: 0; font-size: 1.5em; letter-spacing: 1px;">${data.term}</h3>
+                generate: (data) => {
+                    const pairs = Array.isArray(data.cards) ? data.cards : [];
+                    const total = pairs.length;
+                    if (total === 0) {
+                        return `<div style="max-width: 480px; margin: 20px auto; font-family: inherit; box-sizing: border-box; text-align: center; padding: 30px; color: #888; border: 2px dashed #ddd; border-radius: 12px;">No flashcards added yet. Use the editor to add cards.</div>`;
+                    }
+                    const cards = pairs.map((pair, i) => `
+<details style="margin-bottom: 15px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border: 1px solid #eaeaea; box-sizing: border-box;">
+    <summary style="background-color: ${data.color}; padding: 30px 20px; color: white; text-align: center; cursor: pointer; outline: none; display: block; box-sizing: border-box;">
+        <div style="font-size: 0.8em; letter-spacing: 2px; text-transform: uppercase; opacity: 0.8; margin-bottom: 8px;">Card ${i + 1} of ${total} — click to flip</div>
+        <div style="font-size: 1.5em; font-weight: bold; letter-spacing: 1px;">${pair[0] || ''}</div>
+    </summary>
+    <div style="background-color: #fff; padding: 30px 20px; color: #444; font-size: 1.1em; line-height: 1.5; text-align: center; border-top: 4px solid ${data.color}; box-sizing: border-box;">
+        ${pair[1] || ''}
     </div>
-    <div style="background-color: #fff; padding: 30px 20px; color: #444; font-size: 1.1em; line-height: 1.5; box-sizing: border-box;">
-        ${data.def}
-    </div>
-</div>`
+</details>`).join('');
+                    return `<div style="max-width: 480px; margin: 20px auto; font-family: inherit; box-sizing: border-box;">
+    <p style="text-align: center; color: #888; font-size: 0.9em; margin: 0 0 15px 0;">${total} Flashcard${total !== 1 ? 's' : ''} — Click each card to reveal the definition</p>
+${cards}
+</div>`;
+                }
             },
             horizontalSteps: {
                 name: 'Horizontal Flow / Steps',
