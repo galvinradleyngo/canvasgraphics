@@ -717,34 +717,33 @@ ${listItems}
                 name: 'Vertical Timeline',
                 desc: 'A visual list of events, deadlines, or historical milestones.',
                 fields: [
-                    { id: 'event1', label: 'Event 1 Text', type: 'text', default: 'Week 1: Foundations' },
-                    { id: 'event2', label: 'Event 2 Text', type: 'text', default: 'Week 2: Midterm Project' },
-                    { id: 'event3', label: 'Event 3 Text', type: 'text', default: 'Week 3: Final Exam' },
+                    { id: 'events', label: 'Events', type: 'list', placeholder: 'Enter event text...', defaultItems: ['Week 1: Foundations', 'Week 2: Midterm Project', 'Week 3: Final Exam'] },
                     { id: 'color', label: 'Theme Color', type: 'color', default: '#0055a4' }
                 ],
-                generate: (data) => `
-<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
-    <div style="display: flex; margin-bottom: 15px;">
+                generate: (data) => {
+                    const events = Array.isArray(data.events) ? data.events : [];
+                    const rows = events.map((event, i) => {
+                        const isLast = i === events.length - 1;
+                        if (isLast) {
+                            return `    <div style="display: flex;">
+        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px; flex-shrink: 0;">
+            <div style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background-color: ${data.color}; border-radius: 50%; flex-shrink: 0;"></div>
+        </div>
+        <div style="color: #333; font-weight: bold; line-height: 1.4;">${event}</div>
+    </div>`;
+                        }
+                        return `    <div style="display: flex; margin-bottom: 15px;">
         <div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px; flex-shrink: 0;">
             <div style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background-color: ${data.color}; border-radius: 50%; flex-shrink: 0;"></div>
             <div style="width: 4px; flex: 1; background-color: ${data.color}; margin-top: 4px; min-height: 20px;"></div>
         </div>
-        <div style="padding-bottom: 15px; color: #333; font-weight: bold; line-height: 1.4;">${data.event1}</div>
-    </div>
-    <div style="display: flex; margin-bottom: 15px;">
-        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px; flex-shrink: 0;">
-            <div style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background-color: ${data.color}; border-radius: 50%; flex-shrink: 0;"></div>
-            <div style="width: 4px; flex: 1; background-color: ${data.color}; margin-top: 4px; min-height: 20px;"></div>
-        </div>
-        <div style="padding-bottom: 15px; color: #333; font-weight: bold; line-height: 1.4;">${data.event2}</div>
-    </div>
-    <div style="display: flex;">
-        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 15px; flex-shrink: 0;">
-            <div style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background-color: ${data.color}; border-radius: 50%; flex-shrink: 0;"></div>
-        </div>
-        <div style="color: #333; font-weight: bold; line-height: 1.4;">${data.event3}</div>
-    </div>
-</div>`
+        <div style="padding-bottom: 15px; color: #333; font-weight: bold; line-height: 1.4;">${event}</div>
+    </div>`;
+                    }).join('\n');
+                    return `<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+${rows}
+</div>`;
+                }
             },
             definitionList: {
                 name: 'Definition List',
