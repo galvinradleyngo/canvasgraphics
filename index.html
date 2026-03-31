@@ -1136,26 +1136,25 @@ ${listItems}
                 }
             },
             readWatchList: {
-                name: 'Read or Watch Assignment',
-                desc: 'A dual-coded layout combining reading and video tasks together.',
+                name: 'Read, Watch, or Listen Assignment',
+                desc: 'A focused assignment block where students are directed to read, watch, or listen to one item.',
                 fields: [
-                    { id: 'readTitle', label: 'Read Title', type: 'text', default: '📖 To Read:' },
-                    { id: 'readText', label: 'Reading Item', type: 'text', default: 'Chapter 4 in the textbook (pages 45-60).' },
-                    { id: 'watchTitle', label: 'Watch Title', type: 'text', default: '📺 To Watch:' },
-                    { id: 'watchText', label: 'Watching Item', type: 'text', default: 'The 10-minute video lecture on Constructivism.' },
+                    { id: 'type', label: 'Assignment Type', type: 'select', options: ['read', 'watch', 'listen'], default: 'read' },
+                    { id: 'text', label: 'Assignment Item', type: 'text', default: 'Chapter 4 in the textbook (pages 45-60).' },
                     { id: 'color', label: 'Theme Color', type: 'color', default: '#4a148c' }
                 ],
-                generate: (data) => `
-<div style="display: flex; flex-wrap: wrap; gap: 20px; margin: 25px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
-    <div style="flex: 1; min-width: 250px; background-color: #fff; border-top: 4px solid ${data.color}; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); box-sizing: border-box;">
-        <h4 style="margin: 0 0 10px 0; color: ${data.color}; font-size: 1.1em;">${data.readTitle}</h4>
-        <p style="margin: 0; color: #444; line-height: 1.5;">${data.readText}</p>
-    </div>
-    <div style="flex: 1; min-width: 250px; background-color: #fff; border-top: 4px solid ${data.color}; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); box-sizing: border-box;">
-        <h4 style="margin: 0 0 10px 0; color: ${data.color}; font-size: 1.1em;">${data.watchTitle}</h4>
-        <p style="margin: 0; color: #444; line-height: 1.5;">${data.watchText}</p>
-    </div>
-</div>`
+                generate: (data) => {
+                    const typeConfig = {
+                        read:   { icon: '📖', label: 'To Read' },
+                        watch:  { icon: '📺', label: 'To Watch' },
+                        listen: { icon: '🎧', label: 'To Listen' }
+                    };
+                    const { icon, label } = typeConfig[data.type] || typeConfig.read;
+                    return `<div style="background-color: #fff; border-top: 4px solid ${data.color}; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin: 25px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <h4 style="margin: 0 0 10px 0; color: ${data.color}; font-size: 1.1em;">${icon} ${label}:</h4>
+    <p style="margin: 0; color: #444; line-height: 1.5;">${data.text}</p>
+</div>`;
+                }
             },
             vocabularyGrid: {
                 name: 'Key Terms Grid',
