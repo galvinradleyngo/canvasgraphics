@@ -1096,19 +1096,23 @@ ${listItems}
                 name: 'Knowledge Check (Self-Test)',
                 desc: 'A question prompt with a hidden answer for active recall and self-reflection.',
                 fields: [
-                    { id: 'question', label: 'Question', type: 'textarea', default: 'What is the main difference between formative and summative assessment?' },
-                    { id: 'answer', label: 'Answer (Hidden)', type: 'textarea', default: 'Formative assessment monitors learning during the process, while summative assessment evaluates learning at the end of an instructional unit.' },
+                    { id: 'pairs', label: 'Questions & Answers', type: 'pairs', labels: ['Question', 'Answer (Hidden)'], types: ['textarea', 'textarea'], addLabel: 'Question', defaultItems: [['What is the main difference between formative and summative assessment?', 'Formative assessment monitors learning during the process, while summative assessment evaluates learning at the end of an instructional unit.']] },
                     { id: 'color', label: 'Theme Color', type: 'color', default: '#e65100' }
                 ],
-                generate: (data) => `
-<div style="background-color: #fdf5e6; border-left: 6px solid ${data.color}; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
-    <h4 style="margin: 0 0 10px 0; color: ${data.color}; font-size: 1.1em;">🧠 Knowledge Check</h4>
-    <p style="margin: 0 0 15px 0; color: #333; font-weight: bold; line-height: 1.5;">${data.question}</p>
-    <details style="background-color: #fff; border: 1px solid #e0e0e0; border-radius: 6px; box-sizing: border-box;">
-        <summary style="padding: 10px 15px; font-weight: bold; color: ${data.color}; cursor: pointer; outline: none; box-sizing: border-box;">Show Answer</summary>
-        <div style="padding: 15px; border-top: 1px solid #e0e0e0; color: #555; line-height: 1.5; box-sizing: border-box;">${data.answer}</div>
-    </details>
-</div>`
+                generate: (data) => {
+                    const pairs = Array.isArray(data.pairs) ? data.pairs : [];
+                    const questionsHTML = pairs.map((pair) => `    <div style="margin-bottom: 20px;">
+        <p style="margin: 0 0 10px 0; color: #333; font-weight: bold; line-height: 1.5;">${pair[0] || ''}</p>
+        <details style="background-color: #fff; border: 1px solid #e0e0e0; border-radius: 6px; box-sizing: border-box;">
+            <summary style="padding: 10px 15px; font-weight: bold; color: ${data.color}; cursor: pointer; outline: none; box-sizing: border-box;">Show Answer</summary>
+            <div style="padding: 15px; border-top: 1px solid #e0e0e0; color: #555; line-height: 1.5; box-sizing: border-box;">${pair[1] || ''}</div>
+        </details>
+    </div>`).join('\n');
+                    return `<div style="background-color: #fdf5e6; border-left: 6px solid ${data.color}; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <h4 style="margin: 0 0 15px 0; color: ${data.color}; font-size: 1.1em;">🧠 Knowledge Check</h4>
+${questionsHTML}
+</div>`;
+                }
             },
             prerequisites: {
                 name: 'Prerequisites / Before You Begin',
