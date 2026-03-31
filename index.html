@@ -1011,8 +1011,9 @@ ${listItems}
                     const cards = pairs.map((pair, i) => `
 <details style="margin-bottom: 15px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border: 1px solid #eaeaea; box-sizing: border-box;">
     <summary style="background-color: ${data.color}; padding: 30px 20px; color: white; text-align: center; cursor: pointer; outline: none; display: block; box-sizing: border-box;">
-        <div style="font-size: 0.8em; letter-spacing: 2px; text-transform: uppercase; opacity: 0.8; margin-bottom: 8px;">Card ${i + 1} of ${total} — click to flip</div>
+        <div style="font-size: 0.8em; letter-spacing: 2px; text-transform: uppercase; opacity: 0.8; margin-bottom: 8px;">Card ${i + 1} of ${total}</div>
         <div style="font-size: 1.5em; font-weight: bold; letter-spacing: 1px;">${pair[0] || ''}</div>
+        <div style="font-size: 1.4em; margin-top: 10px; opacity: 0.6; line-height: 1;">&#9662;</div>
     </summary>
     <div style="background-color: #fff; padding: 30px 20px; color: #444; font-size: 1.1em; line-height: 1.5; text-align: center; border-top: 4px solid ${data.color}; box-sizing: border-box;">
         ${pair[1] || ''}
