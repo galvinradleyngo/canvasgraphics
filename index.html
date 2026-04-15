@@ -1185,6 +1185,67 @@ ${listItems}
 ${cards}
 </div>`;
                 }
+            },
+            tabbedPanel: {
+                name: 'Tabbed Content Panel',
+                desc: 'Organizes dense content into interactive tabs (Overview, Resources, Activities, etc.).',
+                fields: [
+                    { id: 'pairs', label: 'Tabs', type: 'pairs', labels: ['Tab Label', 'Tab Content (HTML allowed)'], types: ['text', 'textarea'], addLabel: 'Tab', defaultItems: [['📋 Overview', 'This section covers the main concepts of the module. Replace this text with your own content.'], ['📚 Resources', 'Add your readings, links, or downloads here.'], ['✅ Activities', 'List the tasks and assignments for this module here.']] },
+                    { id: 'color', label: 'Active Tab Color', type: 'color', default: '#0055a4' },
+                    { id: 'bg', label: 'Content Background', type: 'color', default: '#ffffff' }
+                ],
+                generate: (data) => {
+                    const pairs = Array.isArray(data.pairs) ? data.pairs : [];
+                    // Unique prefix so multiple tab panels on the same Canvas page do not conflict
+                    const uid = 'tc' + Math.random().toString(36).slice(2, 8);
+
+                    // onclick: hide all panels, deactivate all buttons, then show the selected tab
+                    const clickHandler = (i) => [
+                        `var p=document.querySelectorAll('.${uid}p');`,
+                        `for(var j=0;j<p.length;j++){p[j].style.display='none';}`,
+                        `var b=document.querySelectorAll('.${uid}b');`,
+                        `for(var j=0;j<b.length;j++){b[j].style.color='#666';b[j].style.borderBottom='3px solid transparent';b[j].style.fontWeight='normal';b[j].setAttribute('aria-selected','false');}`,
+                        `document.getElementById('${uid}p${i}').style.display='block';`,
+                        `this.style.color='${data.color}';`,
+                        `this.style.borderBottom='3px solid ${data.color}';`,
+                        `this.style.fontWeight='bold';`,
+                        `this.setAttribute('aria-selected','true');`
+                    ].join('');
+
+                    const tabButtons = pairs.map((pair, i) =>
+                        `    <button onclick="${clickHandler(i)}" class="${uid}b" role="tab" aria-selected="${i === 0 ? 'true' : 'false'}" aria-controls="${uid}p${i}" id="${uid}b${i}" style="padding: 10px 20px; border: none; background-color: transparent; color: ${i === 0 ? data.color : '#666'}; font-family: inherit; font-size: 1em; cursor: pointer; border-bottom: 3px solid ${i === 0 ? data.color : 'transparent'}; font-weight: ${i === 0 ? 'bold' : 'normal'}; margin-bottom: -2px; white-space: nowrap; box-sizing: border-box;">${pair[0] || 'Tab'}</button>`
+                    ).join('\n');
+
+                    const tabPanels = pairs.map((pair, i) =>
+                        `<div id="${uid}p${i}" class="${uid}p" role="tabpanel" aria-labelledby="${uid}b${i}" tabindex="0" style="display: ${i === 0 ? 'block' : 'none'}; padding: 20px; background-color: ${data.bg}; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; line-height: 1.6; color: #444; box-sizing: border-box;">${pair[1] || ''}</div>`
+                    ).join('\n');
+
+                    return `<div style="margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+    <div style="display: flex; flex-wrap: wrap; border-bottom: 2px solid #ddd; overflow-x: auto; box-sizing: border-box;" role="tablist">
+${tabButtons}
+    </div>
+${tabPanels}
+</div>`;
+                }
+            },
+            courseSnapshot: {
+                name: 'Stats / Icon Row',
+                desc: 'An at-a-glance row of course stats (modules, videos, hours/week, etc.) to orient students.',
+                fields: [
+                    { id: 'pairs', label: 'Stats', type: 'pairs', labels: ['Icon & Value', 'Description Label'], types: ['text', 'text'], addLabel: 'Stat', defaultItems: [['📚 4', 'Modules'], ['🎥 12', 'Video Lessons'], ['📝 6', 'Quizzes'], ['⏱️ ~6 hrs', 'Per Week']] },
+                    { id: 'color', label: 'Accent Color', type: 'color', default: '#0055a4' },
+                    { id: 'bg', label: 'Card Background', type: 'color', default: '#f4f6f8' }
+                ],
+                generate: (data) => {
+                    const pairs = Array.isArray(data.pairs) ? data.pairs : [];
+                    const cards = pairs.map(pair => `    <div style="flex: 1; min-width: 120px; background-color: ${data.bg}; border-radius: 8px; padding: 20px 15px; text-align: center; box-sizing: border-box; border-top: 3px solid ${data.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.07);">
+        <div style="font-size: 1.6em; font-weight: bold; color: ${data.color}; line-height: 1.2; margin-bottom: 6px;">${pair[0] || ''}</div>
+        <div style="font-size: 0.85em; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">${pair[1] || ''}</div>
+    </div>`).join('\n');
+                    return `<div style="display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; font-family: inherit; box-sizing: border-box; max-width: 100%;">
+${cards}
+</div>`;
+                }
             }
         };
 
